@@ -19,27 +19,52 @@ import syslog
 import config
 import requests
 import psycopg2
-import ConfigParser
+
 
 def hay_actualizacion():
     '''
     Devuelve verdadero si existe una nueva version de firmas para actualizar.
+
+    Lee la ultima version aplicada desde el archivo declarado en
+    ´config.LOCAL_VERSION´
     '''
-    # leer archivo de ultima version aplicada
-    version_actual = None
+    try:
+        with open(config.LOCAL_VERSION, 'r') as f:
+            # solo leo los primeros 64 bytes porque el numero de version es un
+            # SHA256
+            version_actual = f.read(64)
+    except:
+       syslog.syslog(syslog.LOG_WARNING, "No se pudo leer el archivo %s" %
+                     config.LOCAL_VERSION)
+       version_actual = None
+    version_ultima = consultar_ultima_version()
     syslog.syslog(syslog.LOG_DEBUG, "Version actual '%s'" % version_actual)
-    return version_actual != consultar_ultima_version()
+    syslog.syslog(syslog.LOG_DEBUG, "Ultima version disponible '%s'" %
+                  version_ultima)
+    return version_actual != version_ultima
 
 
 def actualizar():
     '''
     Aplica la actualizacion de la base de firmas a la ultima version
     disponible.
+
+    Actualiza el archivo que contiene la ultima version de firmas instaladas
+    declarado en 'config.LOCAL_VERSION'
     '''
+    version = consultar_ultima_version()
     clases = descargar_actualizacion()
     syslog.syslog(syslog.LOG_DEBUG,
-                  "Actualizando a la ultima versión de firmas")
-    # escribir en el archivo la ultima version aplicada
+                  "Actualizando a la versión de firmas '%s'" % version)
+    try:
+        with open(config.LOCAL_VERSION, 'w') as f:
+            f.write(version)
+    except:
+        syslog.syslog(syslog.LOG_CRIT, "No se pudo escribir en el archivo %s" %
+                      config.LOCAL_VERSION)
+    syslog.syslog(syslog.LOG_INFO, "La actualización fue exitosa")
+    # TODO transacciones
+    return True
 
 
 def consultar_ultima_version():
@@ -47,8 +72,7 @@ def consultar_ultima_version():
     Obtiene el numero de la ultima version de firmas disponibles desde el
     servidor de firmas.
     '''
-    version = None
-    syslog.syslog(syslog.LOG_DEBUG, "Ultima version disponible '%s'" % version)
+    version = 'b'
     return version
 
 
@@ -62,9 +86,9 @@ def descargar_actualizacion():
 
 
 if __name__ == "__main__":
-    syslog.openlog()
+    syslog.openlog('actualizador')
     if hay_actualizacion():
         actualizar()
     else:
-        syslog.syslog(syslog.LOG_DEBUG, "No hay actualizaciones disponibles")
+        syslog.syslog(syslog.LOG_INFO, "No hay actualizaciones disponibles")
     syslog.closelog()
