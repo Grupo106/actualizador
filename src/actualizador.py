@@ -34,9 +34,9 @@ def hay_actualizacion():
             # SHA256
             actual = f.read(64)
     except:
-       actual = None
-       syslog.syslog(syslog.LOG_WARNING, "No se pudo leer el archivo %s" %
-                     config.LOCAL_VERSION)
+        actual = None
+        syslog.syslog(syslog.LOG_WARNING, "No se pudo leer el archivo %s" %
+                      config.LOCAL_VERSION)
     ultima = consultar_ultima_version()
     syslog.syslog(syslog.LOG_DEBUG, "Version actual '%s'" % actual)
     syslog.syslog(syslog.LOG_DEBUG, "Ultima version disponible '%s'" % ultima)
