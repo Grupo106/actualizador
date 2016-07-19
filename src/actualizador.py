@@ -32,16 +32,22 @@ def hay_actualizacion():
         with open(config.LOCAL_VERSION, 'r') as f:
             # solo leo los primeros 64 bytes porque el numero de version es un
             # SHA256
-            version_actual = f.read(64)
+            actual = f.read(64)
     except:
+       actual = None
        syslog.syslog(syslog.LOG_WARNING, "No se pudo leer el archivo %s" %
                      config.LOCAL_VERSION)
-       version_actual = None
-    version_ultima = consultar_ultima_version()
-    syslog.syslog(syslog.LOG_DEBUG, "Version actual '%s'" % version_actual)
-    syslog.syslog(syslog.LOG_DEBUG, "Ultima version disponible '%s'" %
-                  version_ultima)
-    return version_actual != version_ultima
+    ultima = consultar_ultima_version()
+    syslog.syslog(syslog.LOG_DEBUG, "Version actual '%s'" % actual)
+    syslog.syslog(syslog.LOG_DEBUG, "Ultima version disponible '%s'" % ultima)
+    return actual != ultima
+
+
+def aplicar_actualizacion(clase):
+    '''
+    Guarda los cambios en la clase de trafico.
+    '''
+    pass
 
 
 def actualizar():
@@ -53,9 +59,13 @@ def actualizar():
     declarado en 'config.LOCAL_VERSION'
     '''
     version = consultar_ultima_version()
-    clases = descargar_actualizacion()
-    syslog.syslog(syslog.LOG_DEBUG,
-                  "Actualizando a la versión de firmas '%s'" % version)
+    syslog.syslog(syslog.LOG_DEBUG, "Actualizando a la versión '%s'" % version)
+
+    # descarga y aplica la actualizacion
+    for clase in descargar_actualizacion():
+        aplicar_actualizacion(clase)
+
+    # guarda ultima version en el archivo de versiones
     try:
         with open(config.LOCAL_VERSION, 'w') as f:
             f.write(version)
@@ -63,6 +73,7 @@ def actualizar():
         syslog.syslog(syslog.LOG_CRIT, "No se pudo escribir en el archivo %s" %
                       config.LOCAL_VERSION)
     syslog.syslog(syslog.LOG_INFO, "La actualización fue exitosa")
+
     # TODO transacciones
     return True
 
@@ -72,8 +83,7 @@ def consultar_ultima_version():
     Obtiene el numero de la ultima version de firmas disponibles desde el
     servidor de firmas.
     '''
-    version = 'b'
-    return version
+    return 'a'
 
 
 def descargar_actualizacion():
@@ -82,7 +92,7 @@ def descargar_actualizacion():
     clases de trafico.
     '''
     syslog.syslog(syslog.LOG_DEBUG, "Descargando ultima versión")
-    pass
+    return []
 
 
 if __name__ == "__main__":
