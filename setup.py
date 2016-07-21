@@ -35,6 +35,7 @@ setup(
     long_description=open('README.md').read(),
     install_requires='requests>=2.4.3',
     cmdclass={'test': Tests},
+    scripts=["scripts/actualizador"],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',

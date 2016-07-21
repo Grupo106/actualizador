@@ -1,4 +1,3 @@
-#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 '''
 Este modulo se encarga de mantener actualizada la base de datos de clases de
@@ -15,8 +14,8 @@ Las versiones se descargan en formato JSON.
 (c) 2016. Netcop. Universidad Nacional de la Matanza.
 '''
 import syslog
-import config
-from models import ClaseTrafico
+from netcop import config
+from netcop.models import ClaseTrafico
 
 
 class Actualizador:
@@ -80,9 +79,10 @@ class Actualizador:
         ´config.LOCAL_VERSION´
         '''
         syslog.syslog(syslog.LOG_DEBUG,
-                      "Version aplicada %s" % self.version_actual)
+                      "Version aplicada: %s" % self.version_actual)
         syslog.syslog(syslog.LOG_DEBUG,
-                      "Ultima version disponible %s" % self.version_disponible)
+                      "Ultima version disponible: %s" % 
+                      self.version_disponible)
         return self.version_actual != self.version_disponible
 
     def aplicar_actualizacion(self, clase):
@@ -166,7 +166,7 @@ class Actualizador:
         '''
         syslog.syslog(
             syslog.LOG_DEBUG,
-            "Actualizando a la versión '%s'" % self.version_disponible
+            "Actualizando a la versión: %s" % self.version_disponible
         )
 
         # descarga y aplica la actualizacion
@@ -185,8 +185,6 @@ class Actualizador:
         Obtiene el numero de la ultima version de firmas disponibles desde el
         servidor de firmas.
         '''
-        syslog.syslog(syslog.LOG_DEBUG,
-                      "Ultima version disponible '%s'" % 'a')
         return 'a'
 
     def descargar_actualizacion(self):
@@ -196,13 +194,3 @@ class Actualizador:
         '''
         syslog.syslog(syslog.LOG_DEBUG, "Descargando ultima versión")
         return []
-
-
-if __name__ == "__main__":
-    syslog.openlog('actualizador')
-    actualizador = Actualizador()
-    if actualizador.hay_actualizacion():
-        actualizador.actualizar()
-    else:
-        syslog.syslog(syslog.LOG_INFO, "No hay actualizaciones disponibles")
-    syslog.closelog()

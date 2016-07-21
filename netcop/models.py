@@ -1,7 +1,7 @@
+# -*- coding: utf-8 -*-
 '''
 Este modulo define los objetos que seran guardados en la base de datos.
 '''
-
 
 class ClaseTrafico:
     '''

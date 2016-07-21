@@ -1,0 +1,13 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+import netcop
+import syslog
+
+if __name__ == "__main__":
+    syslog.openlog('actualizador')
+    actualizador = netcop.Actualizador()
+    if actualizador.hay_actualizacion():
+        actualizador.actualizar()
+    else:
+        syslog.syslog(syslog.LOG_INFO, "No hay actualizaciones disponibles")
+    syslog.closelog()
