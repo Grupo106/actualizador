@@ -6,7 +6,7 @@ Se prueban todos los metodos de la clase ´Actualizador´
 '''
 import netcop
 import unittest
-from mock import patch, mock_open, Mock
+from mock import patch, mock_open, Mock, call
 
 
 class ActualizadorTests(unittest.TestCase):
@@ -125,8 +125,8 @@ class ActualizadorTests(unittest.TestCase):
         assert self.actualizador.version_actual == 'b'
         assert ret
 
-    @patch.object(netcop.models.ClaseTrafico, 'save')
-    @patch.object(netcop.models.ClaseTrafico, 'get')
+    @patch.object(netcop.ClaseTrafico, 'save')
+    @patch.object(netcop.ClaseTrafico, 'get')
     def test_aplicar_actualizacion_nueva(self, mock_get, mock_save):
         '''
         Prueba el metodo aplicar_actualizacion con una clase inexistente
@@ -147,65 +147,231 @@ class ActualizadorTests(unittest.TestCase):
         # verifico que todo este bien
         mock_get.assert_called_once_with(1)
         mock_save.assert_called_once()
-        assert ret[0]
-        assert ret[1].id == 1
-        assert ret[1].descripcion == 'clase de prueba'
-        assert '1.1.1.1/32' in ret[1].subredes_outside
-        assert '2.2.2.0/24' in ret[1].subredes_outside
-        assert '3.3.3.3/32' in ret[1].subredes_inside
-        assert 80 in ret[1].puertos_outside
-        assert 443 in ret[1].puertos_outside
-        assert 1024 in ret[1].puertos_inside
+        assert ret.id == 1
+        assert ret.descripcion == 'clase de prueba'
+        assert '1.1.1.1/32' in ret.subredes_outside
+        assert '2.2.2.0/24' in ret.subredes_outside
+        assert '3.3.3.3/32' in ret.subredes_inside
+        assert 80 in ret.puertos_outside
+        assert 443 in ret.puertos_outside
+        assert 1024 in ret.puertos_inside
 
-    def test_aplicar_actualizacion_deshabilitar(self):
+    @patch.object(netcop.ClaseTrafico, 'save')
+    @patch.object(netcop.ClaseTrafico, 'get')
+    def test_aplicar_actualizacion_deshabilitar(self, mock_get, mock_save):
         '''
         Prueba el metodo aplicar_actualizacion con una clase que se deshabilito
         '''
         # preparo datos
-        # llamo metodo a probar
-        # verifico que todo este bien
+        mock_get.return_value = netcop.ClaseTrafico(
+            id=1,
+            nombre='pepe',
+            descripcion='clase de prueba',
+            subredes_outside=['1.1.1.1/32', '2.2.2.0/24'],
+            activa=True
+        )
 
-    def test_aplicar_actualizacion_sin_cambios(self):
+        clase = {
+            'id': 1,
+            'nombre': 'pepe',
+            'descripcion': 'clase de prueba',
+            'subredes_outside': ['1.1.1.1/32', '2.2.2.0/24'],
+            'activa': False
+        }
+        # llamo metodo a probar
+        ret = self.actualizador.aplicar_actualizacion(clase)
+        # verifico que todo este bien
+        mock_get.assert_called_once_with(1)
+        mock_save.assert_called_once()
+        assert not ret.activa
+
+    @patch.object(netcop.ClaseTrafico, 'save')
+    @patch.object(netcop.ClaseTrafico, 'get')
+    def test_aplicar_actualizacion_nombre(self, mock_get, mock_save):
+        '''
+        Prueba el metodo aplicar_actualizacion cambiando el nombre o
+        descripcion de la clase.
+        '''
+        # preparo datos
+        mock_get.return_value = netcop.ClaseTrafico(
+            id=1,
+            nombre='pepe',
+            descripcion='clase de prueba',
+            subredes_outside=['1.1.1.1/32', '2.2.2.0/24'],
+        )
+
+        clase = {
+            'id': 1,
+            'nombre': 'foo',
+            'descripcion': 'bar',
+            'subredes_outside': ['1.1.1.1/32', '2.2.2.0/24'],
+        }
+        # llamo metodo a probar
+        ret = self.actualizador.aplicar_actualizacion(clase)
+        # verifico que todo este bien
+        mock_get.assert_called_once_with(1)
+        mock_save.assert_called_once()
+        assert ret.nombre == 'foo'
+        assert ret.descripcion == 'bar'
+
+    @patch.object(netcop.ClaseTrafico, 'save')
+    @patch.object(netcop.ClaseTrafico, 'get')
+    def test_aplicar_actualizacion_sin_cambios(self, mock_get, mock_save):
         '''
         Prueba el metodo aplicar_actualizacion con una clase existente que no
         tenga cambios
         '''
         # preparo datos
+        mock_get.return_value = netcop.ClaseTrafico(
+            id=1,
+            nombre='foo',
+            descripcion='bar',
+            subredes_outside=['1.1.1.1/32', '2.2.2.0/24'],
+        )
+        clase = {
+            'id': 1,
+            'nombre': 'foo',
+            'descripcion': 'bar',
+            'subredes_outside': ['1.1.1.1/32', '2.2.2.0/24'],
+        }
         # llamo metodo a probar
+        ret = self.actualizador.aplicar_actualizacion(clase)
         # verifico que todo este bien
+        mock_get.assert_called_once_with(1)
+        mock_save.assert_called_once()
+        assert ret.nombre == 'foo'
+        assert ret.descripcion == 'bar'
 
-    def test_aplicar_actualizacion_nueva_subred(self):
+    @patch.object(netcop.ClaseTrafico, 'agregar_subred')
+    @patch.object(netcop.ClaseTrafico, 'save')
+    @patch.object(netcop.ClaseTrafico, 'get')
+    def test_aplicar_actualizacion_nueva_subred(self, mock_get, mock_save,
+                                                mock_agregar):
         '''
         Prueba el metodo aplicar_actualizacion con una clase existente que
         tenga nuevas subredes
         '''
         # preparo datos
+        mock_get.return_value = netcop.ClaseTrafico(
+            id=1,
+            nombre='foo',
+            descripcion='bar',
+            subredes_outside=['1.1.1.1/32', '2.2.2.0/24'],
+        )
+        clase = {
+            'id': 1,
+            'nombre': 'foo',
+            'descripcion': 'bar',
+            'subredes_outside': ['1.1.1.1/32', '2.2.2.0/24', '3.3.0.0/20'],
+            'subredes_inside': ['4.4.4.4/32'],
+        }
         # llamo metodo a probar
+        ret = self.actualizador.aplicar_actualizacion(clase)
         # verifico que todo este bien
+        mock_agregar.assert_has_calls([
+            call('3.3.0.0/20', netcop.ClaseTrafico.OUTSIDE),
+            call('4.4.4.4/32', netcop.ClaseTrafico.INSIDE),
+        ])
+        assert '3.3.0.0/20' in ret.subredes_outside
+        assert '4.4.4.4/32' in ret.subredes_inside
 
-    def test_aplicar_actualizacion_nuevo_puerto(self):
+    @patch.object(netcop.ClaseTrafico, 'agregar_puerto')
+    @patch.object(netcop.ClaseTrafico, 'save')
+    @patch.object(netcop.ClaseTrafico, 'get')
+    def test_aplicar_actualizacion_nuevo_puerto(self, mock_get, mock_save,
+                                                mock_agregar):
         '''
         Prueba el metodo aplicar_actualizacion con una clase existente que
         tenga nuevos puertos
         '''
         # preparo datos
+        mock_get.return_value = netcop.ClaseTrafico(
+            id=1,
+            nombre='foo',
+            descripcion='bar',
+            puertos_outside=[80],
+        )
+        clase = {
+            'id': 1,
+            'nombre': 'foo',
+            'descripcion': 'bar',
+            'puertos_outside': [443, 80],
+            'puertos_inside': [1024]
+        }
         # llamo metodo a probar
+        ret = self.actualizador.aplicar_actualizacion(clase)
         # verifico que todo este bien
+        mock_agregar.assert_has_calls([
+            call(443, netcop.ClaseTrafico.OUTSIDE),
+            call(1024, netcop.ClaseTrafico.INSIDE),
+        ])
+        assert 443 in ret.puertos_outside
+        assert 80 in ret.puertos_outside
+        assert 1024 in ret.puertos_inside
 
-    def test_aplicar_actualizacion_eliminar_subred(self):
+    @patch.object(netcop.ClaseTrafico, 'quitar_subred')
+    @patch.object(netcop.ClaseTrafico, 'save')
+    @patch.object(netcop.ClaseTrafico, 'get')
+    def test_aplicar_actualizacion_eliminar_subred(self, mock_get, mock_save,
+                                                   mock_quitar):
         '''
         Prueba el metodo aplicar_actualizacion con una clase existente que
         tenga menos subredes
         '''
         # preparo datos
+        mock_get.return_value = netcop.ClaseTrafico(
+            id=1,
+            nombre='foo',
+            descripcion='bar',
+            subredes_outside=['1.1.1.1/32', '2.2.2.0/24', '3.3.0.0/20'],
+            subredes_inside=['4.4.4.4/32'],
+        )
+        clase = {
+            'id': 1,
+            'nombre': 'foo',
+            'descripcion': 'bar',
+            'subredes_outside': ['1.1.1.1/32', '2.2.2.0/24'],
+        }
         # llamo metodo a probar
+        ret = self.actualizador.aplicar_actualizacion(clase)
         # verifico que todo este bien
+        mock_quitar.assert_has_calls([
+            call('3.3.0.0/20', netcop.ClaseTrafico.OUTSIDE),
+            call('4.4.4.4/32', netcop.ClaseTrafico.INSIDE),
+        ])
+        assert '3.3.0.0/20' not in ret.subredes_outside
+        assert ret.subredes_inside is None
 
-    def test_aplicar_actualizacion_eliminar_puerto(self):
+    @patch.object(netcop.ClaseTrafico, 'quitar_puerto')
+    @patch.object(netcop.ClaseTrafico, 'save')
+    @patch.object(netcop.ClaseTrafico, 'get')
+    def test_aplicar_actualizacion_eliminar_puerto(self, mock_get, mock_save,
+                                                   mock_quitar):
         '''
         Prueba el metodo aplicar_actualizacion con una clase existente que
         tenga menos puertos
         '''
         # preparo datos
+        mock_get.return_value = netcop.ClaseTrafico(
+            id=1,
+            nombre='foo',
+            descripcion='bar',
+            puertos_outside=[443, 80],
+            puertos_inside=[1024]
+        )
+        clase = {
+            'id': 1,
+            'nombre': 'foo',
+            'descripcion': 'bar',
+            'puertos_outside': [80],
+        }
         # llamo metodo a probar
+        ret = self.actualizador.aplicar_actualizacion(clase)
         # verifico que todo este bien
+        mock_quitar.assert_has_calls([
+            call(443, netcop.ClaseTrafico.OUTSIDE),
+            call(1024, netcop.ClaseTrafico.INSIDE),
+        ])
+        assert 443 not in ret.puertos_outside
+        assert 80 in ret.puertos_outside
+        assert ret.puertos_inside is None

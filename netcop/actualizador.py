@@ -91,11 +91,68 @@ class Actualizador:
         '''
         assert clase.get('id') is not None
         actual = ClaseTrafico.get(clase['id'])
+        # si la clase no existe
         if actual is None:
             actual = ClaseTrafico(**clase)
-            actual.save()
-            return True, actual
-        return False, None
+        # actualizo nombre y descripcion
+        self.actualizar_colecciones(actual, clase)
+        actual.load(**clase)
+        actual.save()
+        return actual
+
+    def actualizar_colecciones(self, viejo, nuevo):
+        '''
+        Actualiza las colecciones de subredes y puertos de las clases de
+        trafico de todos los grupos (inside o outside).
+
+        El parametro *viejo* debe ser una instancia de ClaseTrafico y el
+        parametro *nuevo* debe ser un diccionario que contenga la nueva
+        informacion a actualizar.
+        '''
+        colecciones = (
+            ('subredes_outside', 'subred', ClaseTrafico.OUTSIDE),
+            ('subredes_inside', 'subred', ClaseTrafico.INSIDE),
+            ('puertos_outside', 'puerto', ClaseTrafico.OUTSIDE),
+            ('puertos_inside', 'puerto', ClaseTrafico.INSIDE),
+        )
+        for (coleccion, metodo, grupo) in colecciones:
+            (agregar, quitar) = self.diferencia(coleccion, viejo, nuevo)
+            for item in agregar:
+                getattr(viejo, 'agregar_%s' % metodo)(item, grupo)
+            for item in quitar:
+                getattr(viejo, 'quitar_%s' % metodo)(item, grupo)
+
+
+    def diferencia(self, nombre_coleccion, viejo, nuevo):
+        '''
+        Obtiene la diferencia entre dos colecciones indicando los items de la
+        vieja coleccion que se tienen que borrar y cuales se tienen que agregar
+
+        El parametro *viejo* debe ser una instancia de ClaseTrafico y el
+        parametro *nuevo* debe ser un diccionario que contenga la nueva
+        informacion a actualizar.
+
+        Devuelve una tupla (agregar, quitar) donde agregar son los items que
+        le faltan a la coleccion vieja y quitar son los items que le sobran a
+        la collecion vieja
+        '''
+        new = nuevo.get(nombre_coleccion)
+        old = getattr(viejo, nombre_coleccion)
+        agregar = []
+        quitar = []
+        # agregar
+        if new:
+            if old:
+                agregar = (set(new) - set(old))
+            else:
+                agregar = new
+        # quitar
+        if old:
+            if new:
+                quitar = (set(old) - set(new))
+            else:
+                quitar = old
+        return (agregar, quitar)
 
     def actualizar(self):
         '''
