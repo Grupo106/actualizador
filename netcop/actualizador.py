@@ -87,23 +87,26 @@ class Actualizador:
 
         Actualiza el archivo que contiene la ultima version de firmas
         instaladas declarado en 'config.LOCAL_VERSION'
+
+        Devuelve verdadero si alguna clase fue modificada
         '''
         syslog.syslog(
             syslog.LOG_DEBUG,
             "Actualizando a la versión '%s'" % self.version_disponible
         )
+        ret = False
 
         # descarga y aplica la actualizacion
         # TODO transacciones
         for clase in self.descargar_actualizacion():
-            self.aplicar_actualizacion(clase)
+            ret |= self.aplicar_actualizacion(clase)
 
         # guarda ultima version en el archivo de versiones
         self.version_actual = self.version_disponible
         self.guardar_version_actual()
         syslog.syslog(syslog.LOG_INFO, "La actualización fue exitosa")
 
-        return True
+        return ret
 
     def obtener_version_disponible(self):
         '''

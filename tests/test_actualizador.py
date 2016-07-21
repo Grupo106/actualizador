@@ -6,7 +6,7 @@ Se prueban todos los metodos de la clase ´Actualizador´
 '''
 import netcop
 import unittest
-from mock import patch, mock_open
+from mock import patch, mock_open, Mock
 
 
 class ActualizadorTests(unittest.TestCase):
@@ -91,3 +91,97 @@ class ActualizadorTests(unittest.TestCase):
         # verifico que todo este bien
         mock_open.assert_called_once_with(netcop.config.LOCAL_VERSION, 'w')
         mock_syslog.assert_called_once()
+
+    def test_actualizar(self):
+        '''
+        Prueba el metodo actualizar.
+        '''
+        # preparo datos
+        self.actualizador.version_actual = 'a'
+        self.actualizador.version_disponible = 'b'
+
+        mock_descargar = Mock()
+        mock_descargar.return_value = [
+            {
+                'nombre': 'foo',
+                'descripcion': 'bar'
+            },
+            {
+                'nombre': 'bar',
+                'descripcion': 'bar'
+            },
+        ]
+        self.actualizador.descargar_actualizacion = mock_descargar
+
+        mock_aplicar = Mock()
+        mock_aplicar.return_value = True
+        self.actualizador.aplicar_actualizacion = mock_aplicar
+        # llamo metodo a probar
+        ret = self.actualizador.actualizar()
+        # verifico que todo este bien
+        mock_descargar.assert_called_once()
+        mock_aplicar.assert_called()
+        assert mock_aplicar.call_count == 2
+        assert self.actualizador.version_actual == 'b'
+        assert ret
+
+    def test_aplicar_actualizacion_nueva(self):
+        '''
+        Prueba el metodo aplicar_actualizacion con una clase inexistente
+        '''
+        # preparo datos
+        # llamo metodo a probar
+        # verifico que todo este bien
+
+    def test_aplicar_actualizacion_deshabilitar(self):
+        '''
+        Prueba el metodo aplicar_actualizacion con una clase que se deshabilito
+        '''
+        # preparo datos
+        # llamo metodo a probar
+        # verifico que todo este bien
+
+    def test_aplicar_actualizacion_sin_cambios(self):
+        '''
+        Prueba el metodo aplicar_actualizacion con una clase existente que no
+        tenga cambios
+        '''
+        # preparo datos
+        # llamo metodo a probar
+        # verifico que todo este bien
+
+    def test_aplicar_actualizacion_nueva_subred(self):
+        '''
+        Prueba el metodo aplicar_actualizacion con una clase existente que
+        tenga nuevas subredes
+        '''
+        # preparo datos
+        # llamo metodo a probar
+        # verifico que todo este bien
+
+    def test_aplicar_actualizacion_nuevo_puerto(self):
+        '''
+        Prueba el metodo aplicar_actualizacion con una clase existente que
+        tenga nuevos puertos
+        '''
+        # preparo datos
+        # llamo metodo a probar
+        # verifico que todo este bien
+
+    def test_aplicar_actualizacion_eliminar_subred(self):
+        '''
+        Prueba el metodo aplicar_actualizacion con una clase existente que
+        tenga menos subredes
+        '''
+        # preparo datos
+        # llamo metodo a probar
+        # verifico que todo este bien
+
+    def test_aplicar_actualizacion_eliminar_puerto(self):
+        '''
+        Prueba el metodo aplicar_actualizacion con una clase existente que
+        tenga menos puertos
+        '''
+        # preparo datos
+        # llamo metodo a probar
+        # verifico que todo este bien
