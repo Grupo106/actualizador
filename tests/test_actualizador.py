@@ -125,17 +125,14 @@ class ActualizadorTests(unittest.TestCase):
         assert self.actualizador.version_actual == 'b'
         assert ret
 
-    @unittest.skip("No anda el mock")
-    @patch('netcop.models.ClaseTrafico')
-    def test_aplicar_actualizacion_nueva(self, mock_clase):
+    @patch.object(netcop.models.ClaseTrafico, 'save')
+    @patch.object(netcop.models.ClaseTrafico, 'get')
+    def test_aplicar_actualizacion_nueva(self, mock_get, mock_save):
         '''
         Prueba el metodo aplicar_actualizacion con una clase inexistente
         '''
         # preparo datos
-        mock_clase.get = Mock()
-        mock_clase.get.return_value = None
-        mock_clase.save = Mock()
-        mock_clase.get.return_value = True
+        mock_get.return_value = None
         clase = {
             'id': 1,
             'nombre': 'pepe',
@@ -148,8 +145,8 @@ class ActualizadorTests(unittest.TestCase):
         # llamo metodo a probar
         ret = self.actualizador.aplicar_actualizacion(clase)
         # verifico que todo este bien
-        mock_clase.get.assert_called_once_with(1)
-        mock_clase.save.assert_called_once()
+        mock_get.assert_called_once_with(1)
+        mock_save.assert_called_once()
         assert ret
 
     def test_aplicar_actualizacion_deshabilitar(self):

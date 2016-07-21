@@ -90,7 +90,6 @@ class Actualizador:
         Guarda los cambios en la clase de trafico.
         '''
         assert clase.get('id') is not None
-        print(type(ClaseTrafico.get))
         actual = ClaseTrafico.get(clase['id'])
         if actual is None:
             actual = ClaseTrafico(**clase)
