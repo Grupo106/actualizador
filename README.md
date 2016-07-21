@@ -1,3 +1,7 @@
+[![GitHub tag](https://img.shields.io/github/tag/Grupo106/actualizador.svg?maxAge=2592000?style=plastic)](https://github.com/Grupo106/actualizador/releases)
+[![Build Status](https://travis-ci.org/Grupo106/actualizador.svg?branch=master)](https://travis-ci.org/Grupo106/actualizador)
+[![codecov](https://codecov.io/gh/Grupo106/actualizador/branch/master/graph/badge.svg)](https://codecov.io/gh/Grupo106/actualizador)
+
 # actualizador
 > Este modulo actualiza las clases de trafico desde un servidor externo
 
