@@ -94,9 +94,8 @@ class Actualizador:
         if actual is None:
             actual = ClaseTrafico(**clase)
             actual.save()
-            return True 
-        return False
-        
+            return True, actual
+        return False, None
 
     def actualizar(self):
         '''

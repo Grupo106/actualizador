@@ -147,7 +147,15 @@ class ActualizadorTests(unittest.TestCase):
         # verifico que todo este bien
         mock_get.assert_called_once_with(1)
         mock_save.assert_called_once()
-        assert ret
+        assert ret[0]
+        assert ret[1].id == 1
+        assert ret[1].descripcion == 'clase de prueba'
+        assert '1.1.1.1/32' in ret[1].subredes_outside
+        assert '2.2.2.0/24' in ret[1].subredes_outside
+        assert '3.3.3.3/32' in ret[1].subredes_inside
+        assert 80 in ret[1].puertos_outside
+        assert 443 in ret[1].puertos_outside
+        assert 1024 in ret[1].puertos_inside
 
     def test_aplicar_actualizacion_deshabilitar(self):
         '''

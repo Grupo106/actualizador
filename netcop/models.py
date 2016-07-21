@@ -2,6 +2,7 @@
 Este modulo define los objetos que seran guardados en la base de datos.
 '''
 
+
 class ClaseTrafico:
     '''
     Una clase de trafico almacena los patrones a reconocer en los paquetes
