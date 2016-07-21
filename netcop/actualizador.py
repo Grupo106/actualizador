@@ -13,7 +13,9 @@ Las versiones se descargan en formato JSON.
 
 (c) 2016. Netcop. Universidad Nacional de la Matanza.
 '''
+import sys
 import syslog
+import requests
 from netcop import config
 from netcop.models import ClaseTrafico
 
@@ -78,11 +80,11 @@ class Actualizador:
         Lee la ultima version aplicada desde el archivo declarado en
         ´config.LOCAL_VERSION´
         '''
-        syslog.syslog(syslog.LOG_DEBUG,
-                      "Version aplicada: %s" % self.version_actual)
-        syslog.syslog(syslog.LOG_DEBUG,
-                      "Ultima version disponible: %s" % 
-                      self.version_disponible)
+        syslog.syslog(
+            syslog.LOG_DEBUG,
+            "Version disponible: %s - Version aplicada: %s" % 
+            (self.version_disponible[0:6], self.version_actual[0:6])
+        )
         return self.version_actual != self.version_disponible
 
     def aplicar_actualizacion(self, clase):
@@ -93,7 +95,7 @@ class Actualizador:
         actual = ClaseTrafico.get(clase['id'])
         # si la clase no existe
         if actual is None:
-            actual = ClaseTrafico(**clase)
+            actual = ClaseTrafico()
         # actualizo nombre y descripcion
         self.actualizar_colecciones(actual, clase)
         actual.load(**clase)
@@ -166,7 +168,7 @@ class Actualizador:
         '''
         syslog.syslog(
             syslog.LOG_DEBUG,
-            "Actualizando a la versión: %s" % self.version_disponible
+            "Actualizando a la version: %s" % self.version_disponible[0:6]
         )
 
         # descarga y aplica la actualizacion
@@ -185,7 +187,18 @@ class Actualizador:
         Obtiene el numero de la ultima version de firmas disponibles desde el
         servidor de firmas.
         '''
-        return 'a'
+        try:
+            r = requests.get(config.URL_VERSION)
+            if r.status_code == 200:
+                return r.json()['version']
+            raise Exception("Respuesta del servidor: %d" % r.status_code)
+        except:
+            sys.stderr.write("No se pudo actualizar: "
+                             "%s no está disponible\n" % config.URL_VERSION)
+            syslog.syslog(syslog.LOG_CRIT, 
+                          "No se pudo actualizar: %s no está disponible" % 
+                          config.URL_VERSION)
+            raise
 
     def descargar_actualizacion(self):
         '''
@@ -193,4 +206,15 @@ class Actualizador:
         clases de trafico.
         '''
         syslog.syslog(syslog.LOG_DEBUG, "Descargando ultima versión")
-        return []
+        try:
+            r = requests.get(config.URL_DOWNLOAD)
+            if r.status_code == 200:
+                return r.json()['clases']
+            raise Exception("Respuesta del servidor: %d" % r.status_code)
+        except:
+            sys.stderr.write("No se pudo actualizar: "
+                             "%s no está disponible\n" % config.URL_VERSION)
+            syslog.syslog(syslog.LOG_CRIT, 
+                          "No se pudo actualizar: %s no está disponible" % 
+                          config.URL_VERSION)
+            raise

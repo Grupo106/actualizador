@@ -27,7 +27,6 @@ class ClaseTrafico:
         print("INSERT INTO clase_trafico(id, nombre, descripcion) "
               "VALUES (%d, %s, %s)"
               % (self.id, self.nombre, self.descripcion))
-        return None
 
     def load(self, **kwargs):
         '''
@@ -62,14 +61,14 @@ class ClaseTrafico:
               "VALUES (%d, %s, %s)"
               % (self.id, self.nombre, self.descripcion))
 
-    def agregar_puerto(self, subred, tipo):
+    def agregar_puerto(self, puerto, tipo):
         '''
         Agrega puerto a la coleccion de puertos en la base de datos. El tipo
         puede ser INSIDE o OUTSIDE
         '''
-        print("INSERT INTO clase_puerto(id, nombre, descripcion) "
-              "VALUES (%d, %s, %s)"
-              % (self.id, self.nombre, self.descripcion))
+        print("INSERT INTO puerto(numero, protocolo) "
+              "VALUES (%d, %s)"
+              % (puerto, self.nombre))
 
     def quitar_subred(self, subred, tipo):
         '''
@@ -78,7 +77,7 @@ class ClaseTrafico:
         '''
         print("DELETE FROM clase_cidr WHERE id=%d" % self.id)
 
-    def quitar_puerto(self, subred, tipo):
+    def quitar_puerto(self, puerto, tipo):
         '''
         Agrega subred a la coleccion de subredes en la base de datos. El tipo
         puede ser INSIDE o OUTSIDE
