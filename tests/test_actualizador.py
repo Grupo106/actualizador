@@ -24,7 +24,7 @@ class ActualizadorTests(unittest.TestCase):
         self.actualizador.version_disponible = 'b'
         # llamo metodo a probar
         assert self.actualizador.hay_actualizacion()
-        
+
         # preparo datos
         self.actualizador.version_actual = 'b'
         self.actualizador.version_disponible = 'b'
@@ -76,7 +76,7 @@ class ActualizadorTests(unittest.TestCase):
         m.assert_called_once_with(netcop.config.LOCAL_VERSION, 'w')
         handle = m()
         handle.write.assert_called_once_with('pepe')
-    
+
     @patch('syslog.syslog')
     @patch('netcop.actualizador.open')
     def test_guardar_version_actual_fail(self, mock_open, mock_syslog):
@@ -125,13 +125,32 @@ class ActualizadorTests(unittest.TestCase):
         assert self.actualizador.version_actual == 'b'
         assert ret
 
-    def test_aplicar_actualizacion_nueva(self):
+    @unittest.skip("No anda el mock")
+    @patch('netcop.models.ClaseTrafico')
+    def test_aplicar_actualizacion_nueva(self, mock_clase):
         '''
         Prueba el metodo aplicar_actualizacion con una clase inexistente
         '''
         # preparo datos
+        mock_clase.get = Mock()
+        mock_clase.get.return_value = None
+        mock_clase.save = Mock()
+        mock_clase.get.return_value = True
+        clase = {
+            'id': 1,
+            'nombre': 'pepe',
+            'descripcion': 'clase de prueba',
+            'subredes_outside': ['1.1.1.1/32', '2.2.2.0/24'],
+            'subredes_inside': ['3.3.3.3/32'],
+            'puertos_outside': [80, 443],
+            'puertos_inside': [1024],
+        }
         # llamo metodo a probar
+        ret = self.actualizador.aplicar_actualizacion(clase)
         # verifico que todo este bien
+        mock_clase.get.assert_called_once_with(1)
+        mock_clase.save.assert_called_once()
+        assert ret
 
     def test_aplicar_actualizacion_deshabilitar(self):
         '''

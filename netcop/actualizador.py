@@ -16,13 +16,24 @@ Las versiones se descargan en formato JSON.
 '''
 import syslog
 import config
+from models import ClaseTrafico
 
 
 class Actualizador:
+    '''
+    Se encarga de mantener actualizada la base de datos de clases de trafico
+    con la ultima version de firmas publicada.
+
+    Para ello consulta cual es la ultima version al repositorio de firmas, si
+    la version es distinta a la instalada, se descarga la nueva versión.
+    '''
     version_actual = None
     version_ultima = None
 
     def __init__(self):
+        '''
+        Obtiene la ultima version aplicada y la ultima version disponible.
+        '''
         self.version_actual = self.obtener_version_actual()
         self.version_disponible = self.obtener_version_disponible()
 
@@ -36,9 +47,9 @@ class Actualizador:
         version = None
         try:
             with open(config.LOCAL_VERSION, 'r') as f:
-                # solo leo los primeros 64 bytes porque el numero de version
-                # es un # SHA256
-                version = f.read(64)
+                # solo leo los primeros 65 bytes porque el numero de version
+                # es un SHA256
+                version = f.read(65)
         except:
             syslog.syslog(syslog.LOG_WARNING,
                           "No se pudo leer el archivo %s" %
@@ -78,7 +89,15 @@ class Actualizador:
         '''
         Guarda los cambios en la clase de trafico.
         '''
-        pass
+        assert clase.get('id') is not None
+        print(type(ClaseTrafico.get))
+        actual = ClaseTrafico.get(clase['id'])
+        if actual is None:
+            actual = ClaseTrafico(**clase)
+            actual.save()
+            return True 
+        return False
+        
 
     def actualizar(self):
         '''
