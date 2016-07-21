@@ -168,19 +168,17 @@ class Actualizador:
             syslog.LOG_DEBUG,
             "Actualizando a la versión '%s'" % self.version_disponible
         )
-        ret = False
 
         # descarga y aplica la actualizacion
         # TODO transacciones
         for clase in self.descargar_actualizacion():
-            ret |= self.aplicar_actualizacion(clase)
+            self.aplicar_actualizacion(clase)
 
         # guarda ultima version en el archivo de versiones
         self.version_actual = self.version_disponible
         self.guardar_version_actual()
         syslog.syslog(syslog.LOG_INFO, "La actualización fue exitosa")
 
-        return ret
 
     def obtener_version_disponible(self):
         '''

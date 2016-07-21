@@ -123,7 +123,6 @@ class ActualizadorTests(unittest.TestCase):
         mock_aplicar.assert_called()
         assert mock_aplicar.call_count == 2
         assert self.actualizador.version_actual == 'b'
-        assert ret
 
     @patch.object(netcop.ClaseTrafico, 'save')
     @patch.object(netcop.ClaseTrafico, 'get')
