@@ -99,6 +99,8 @@ class Actualizador:
             self.aplicar_actualizacion(clase)
 
         # guarda ultima version en el archivo de versiones
+        self.version_actual = self.version_disponible
+        self.guardar_version_actual()
         syslog.syslog(syslog.LOG_INFO, "La actualización fue exitosa")
 
         return True
