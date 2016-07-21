@@ -374,3 +374,11 @@ class ActualizadorTests(unittest.TestCase):
         assert 443 not in ret.puertos_outside
         assert 80 in ret.puertos_outside
         assert ret.puertos_inside is None
+
+    @unittest.skip("no implementado")
+    def test_consultar_version_disponible(self):
+        pass
+
+    @unittest.skip("no implementado")
+    def test_descargar_actualizacion(self):
+        pass
