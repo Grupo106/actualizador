@@ -2,81 +2,100 @@
 '''
 Este modulo define los objetos que seran guardados en la base de datos.
 '''
+import peewee as models
+from netcop import config
+
+# Identificador de grupo para servicios que esten en la red local
+INSIDE = 'i'
+# Identificador de grupo para servicios que esten en Internet
+OUTSIDE = 'o'
+
+# Declaro parametros de conexion de la base de datos
+db = models.PostgresqlDatabase(config.BD_DATABASE,
+                               host=config.BD_HOST,
+                               user=config.BD_USER,
+                               password=config.BD_PASSWORD)
 
 
-class ClaseTrafico:
+class ClaseTrafico(models.Model):
     '''
     Una clase de trafico almacena los patrones a reconocer en los paquetes
     capturados.
     '''
-    # Identificador de grupo para servicios que esten en la red local
-    INSIDE = 'i'
-    # Identificador de grupo para servicios que esten en Internet
-    OUTSIDE = 'o'
 
-    def __init__(self, **kwargs):
-        '''
-        Crea una instancia de la clase de trafico a traves de los parametros
-        con nombre.
-        '''
-        self.load(**kwargs)
+    id_clase = models.IntegerField(primary_key=True)
+    nombre = models.CharField(max_length=32)
+    descripcion = models.CharField(max_length=160)
+    tipo = models.SmallIntegerField(default=0)
+    activa = models.BooleanField(default=True)
 
-    def save(self):
-        '''
-        Guarda la clase de trafico en la base de datos.
-        '''
-        print("INSERT INTO clase_trafico(id, nombre, descripcion) "
-              "VALUES (%d, %s, %s)"
-              % (self.id, self.nombre, self.descripcion))
+    class Meta:
+        database = db
+        db_table = u'clase_trafico'
 
-    def load(self, **kwargs):
-        '''
-        Carga atributos desde parametros por nombre.
-        '''
-        self.id = kwargs.get('id')
-        self.nombre = kwargs.get('nombre', '')
-        self.descripcion = kwargs.get('descripcion', '')
-        self.subredes_outside = kwargs.get('subredes_outside')
-        self.subredes_inside = kwargs.get('subredes_inside')
-        self.puertos_outside = kwargs.get('puertos_outside')
-        self.puertos_inside = kwargs.get('puertos_inside')
-        self.activa = kwargs.get('activa', True)
 
-    @classmethod
-    def get(self, _id):
-        '''
-        Obtiene una clase de trafico por su id. Si la clase no existe devuelve
-        None.
+class CIDR(models.Model):
+    '''
+    El CIDR representa una subred. Se compone de una dirección de red y una
+    máscara de subred representada con un prefijo que indica la cantidad de
+    bits que contiene la máscara.
 
-        La clase de trafico debe estar marcada como clase de trafico de sistema
-        en la base de datos.
-        '''
-        return None
+    Por ejemplo la subred 10.200.0.0 con máscara de subred 255.255.0.0 se
+    representa como 10.200.0.0/16 siendo el prefijo 16, porque la mascara
+    contiene 16 bits en uno.
 
-    def agregar_subred(self, subred, tipo):
-        '''
-        Agrega subred a la coleccion de subredes en la base de datos. El tipo
-        puede ser INSIDE o OUTSIDE
-        '''
-        pass
+    Si todos los bits de la mascara de subred están en uno representan a una
+    red de host y el prefijo es 32.
+    '''
+    id_cidr = models.IntegerField(primary_key=True)
+    direccion = models.CharField(max_length=32)
+    prefijo = models.SmallIntegerField(default=0)
 
-    def agregar_puerto(self, puerto, tipo):
-        '''
-        Agrega puerto a la coleccion de puertos en la base de datos. El tipo
-        puede ser INSIDE o OUTSIDE
-        '''
-        pass
+    class Meta:
+        database = db
+        db_table = u'cidr'
 
-    def quitar_subred(self, subred, tipo):
-        '''
-        Quita la subred de la coleccion de subredes en la base de datos. El
-        tipo puede ser INSIDE o OUTSIDE
-        '''
-        pass
 
-    def quitar_puerto(self, puerto, tipo):
-        '''
-        Agrega subred a la coleccion de subredes en la base de datos. El tipo
-        puede ser INSIDE o OUTSIDE
-        '''
-        pass
+class Puerto(models.Model):
+    '''
+    Un puerto identifica una aplicacion en un host. Sirve para mantener muchas
+    conversaciones al mismo tiempo con distintas aplicaciones.
+
+    Los puertos se componen de un numero de 2 bytes sin signo (rango entre 0 y
+    65535) y un protocolo que puede ser 6 (TCP) o 17 (UDP).
+    '''
+    id_puerto = models.IntegerField(primary_key=True)
+    numero = models.IntegerField()
+    protocolo = models.SmallIntegerField(default=0)
+
+    class Meta:
+        database = db
+        db_table = u'puerto'
+
+
+class ClaseCIDR(models.Model):
+    '''
+    Relaciona una clase de trafico con un CIDR.
+    '''
+    id_clase = models.ForeignKeyField(ClaseTrafico)
+    id_cidr = models.ForeignKeyField(CIDR)
+    grupo = models.FixedCharField(max_length=1)
+
+    class Meta:
+        database = db
+        db_table = u'clase_cidr'
+        primary_key = models.CompositeKey('id_clase', 'id_cidr')
+
+
+class ClasePuerto(models.Model):
+    '''
+    Relaciona una clase de trafico con un puerto.
+    '''
+    id_clase = models.ForeignKeyField(ClaseTrafico)
+    id_puerto = models.ForeignKeyField(Puerto)
+    grupo = models.FixedCharField(max_length=1)
+
+    class Meta:
+        database = db
+        db_table = u'clase_puerto'
+        primary_key = models.CompositeKey('id_clase', 'id_puerto')
