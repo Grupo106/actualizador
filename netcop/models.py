@@ -3,6 +3,7 @@
 Este modulo define los objetos que seran guardados en la base de datos.
 '''
 
+
 class ClaseTrafico:
     '''
     Una clase de trafico almacena los patrones a reconocer en los paquetes
@@ -65,6 +66,7 @@ class ClaseTrafico:
         puede ser INSIDE o OUTSIDE
         '''
         pass
+
     def quitar_subred(self, subred, tipo):
         '''
         Quita la subred de la coleccion de subredes en la base de datos. El

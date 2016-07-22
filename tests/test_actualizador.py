@@ -6,7 +6,7 @@ Se prueban todos los metodos de la clase ´Actualizador´
 '''
 import netcop
 import unittest
-from mock import patch, mock_open, Mock, call, Mock
+from mock import patch, mock_open, Mock, call
 
 
 class ActualizadorTests(unittest.TestCase):
@@ -118,7 +118,7 @@ class ActualizadorTests(unittest.TestCase):
         mock_aplicar.return_value = True
         self.actualizador.aplicar_actualizacion = mock_aplicar
         # llamo metodo a probar
-        ret = self.actualizador.actualizar()
+        self.actualizador.actualizar()
         # verifico que todo este bien
         mock_descargar.assert_called_once()
         mock_aplicar.assert_called()
@@ -381,7 +381,7 @@ class ActualizadorTests(unittest.TestCase):
         '''
         Prueba obtener la ultima version disponible desde el servidor.
         '''
-        # preparo datos   
+        # preparo datos
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json = Mock(return_value={'version': 'a'})
@@ -396,10 +396,18 @@ class ActualizadorTests(unittest.TestCase):
         '''
         Prueba el tratamiento de error al obtener la ultima version disponible
         '''
-        # preparo datos   
+        # preparo datos
         mock_get.side_effect = IOError()
         # llamo metodo a probar
         with self.assertRaises(IOError):
+            self.actualizador.obtener_version_disponible()
+
+        # preparo datos
+        mock_get.side_effect = None
+        mock_get.return_value = Mock()
+        mock_get.return_value.status_code = 500
+        # llamo metodo a probar
+        with self.assertRaises(Exception):
             self.actualizador.obtener_version_disponible()
 
     @patch('requests.get')
@@ -408,7 +416,7 @@ class ActualizadorTests(unittest.TestCase):
         Prueba la descarga de la ultima version desde el servidor. Debe
         retornar una lista de clases de trafico en forma de diccionarios.
         '''
-        # preparo datos   
+        # preparo datos
         clases = [
             {
                 'id': 1,
@@ -437,10 +445,18 @@ class ActualizadorTests(unittest.TestCase):
         '''
         Prueba el tratamiento de error al descargar la ultima version
         '''
-        # preparo datos   
+        # preparo datos
         mock_get.side_effect = IOError()
         # llamo metodo a probar
         with self.assertRaises(IOError):
+            self.actualizador.descargar_actualizacion()
+
+        # preparo datos
+        mock_get.side_effect = None
+        mock_get.return_value = Mock()
+        mock_get.return_value.status_code = 500
+        # llamo metodo a probar
+        with self.assertRaises(Exception):
             self.actualizador.descargar_actualizacion()
 
 

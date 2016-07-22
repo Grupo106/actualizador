@@ -1,10 +1,5 @@
 from setuptools import setup
 
-from distutils.core import Command
-
-
-
-
 setup(
     name='actualizador',
     version='0.1.0',

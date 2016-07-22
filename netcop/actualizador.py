@@ -82,7 +82,7 @@ class Actualizador:
         self.version_disponible = self.obtener_version_disponible()
         syslog.syslog(
             syslog.LOG_DEBUG,
-            "Version disponible: %s - Version aplicada: %s" % 
+            "Version disponible: %s - Version aplicada: %s" %
             (self.version_disponible[0:6], self.version_actual[0:6])
         )
         return self.version_actual != self.version_disponible
@@ -123,7 +123,6 @@ class Actualizador:
                 getattr(viejo, 'agregar_%s' % metodo)(item, grupo)
             for item in quitar:
                 getattr(viejo, 'quitar_%s' % metodo)(item, grupo)
-
 
     def diferencia(self, nombre_coleccion, viejo, nuevo):
         '''
@@ -181,7 +180,6 @@ class Actualizador:
         self.guardar_version_actual()
         syslog.syslog(syslog.LOG_INFO, "La actualización fue exitosa")
 
-
     def obtener_version_disponible(self):
         '''
         Obtiene el numero de la ultima version de firmas disponibles desde el
@@ -195,8 +193,8 @@ class Actualizador:
         except:
             sys.stderr.write("No se pudo actualizar: "
                              "%s no está disponible\n" % config.URL_VERSION)
-            syslog.syslog(syslog.LOG_CRIT, 
-                          "No se pudo actualizar: %s no está disponible" % 
+            syslog.syslog(syslog.LOG_CRIT,
+                          "No se pudo actualizar: %s no está disponible" %
                           config.URL_VERSION)
             raise
 
@@ -214,7 +212,7 @@ class Actualizador:
         except:
             sys.stderr.write("No se pudo actualizar: "
                              "%s no está disponible\n" % config.URL_VERSION)
-            syslog.syslog(syslog.LOG_CRIT, 
-                          "No se pudo actualizar: %s no está disponible" % 
+            syslog.syslog(syslog.LOG_CRIT,
+                          "No se pudo actualizar: %s no está disponible" %
                           config.URL_VERSION)
             raise
