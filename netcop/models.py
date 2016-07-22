@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 '''
 Este modulo define los objetos que seran guardados en la base de datos.
+
+Utiliza el paquete *peewee* para el mapeo objeto-relacional. Permite realizar
+las consultas a la base de datos en lenguaje python de forma sencilla sin
+necesidad de escribir codigo SQL.
 '''
 import peewee as models
 from netcop import config
@@ -22,7 +26,6 @@ class ClaseTrafico(models.Model):
     Una clase de trafico almacena los patrones a reconocer en los paquetes
     capturados.
     '''
-
     id_clase = models.IntegerField(primary_key=True)
     nombre = models.CharField(max_length=32)
     descripcion = models.CharField(max_length=160)
