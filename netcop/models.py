@@ -57,29 +57,24 @@ class ClaseTrafico:
         Agrega subred a la coleccion de subredes en la base de datos. El tipo
         puede ser INSIDE o OUTSIDE
         '''
-        print("INSERT INTO clase_cidr(id, nombre, descripcion) "
-              "VALUES (%d, %s, %s)"
-              % (self.id, self.nombre, self.descripcion))
+        pass
 
     def agregar_puerto(self, puerto, tipo):
         '''
         Agrega puerto a la coleccion de puertos en la base de datos. El tipo
         puede ser INSIDE o OUTSIDE
         '''
-        print("INSERT INTO puerto(numero, protocolo) "
-              "VALUES (%d, %s)"
-              % (puerto, self.nombre))
-
+        pass
     def quitar_subred(self, subred, tipo):
         '''
         Quita la subred de la coleccion de subredes en la base de datos. El
         tipo puede ser INSIDE o OUTSIDE
         '''
-        print("DELETE FROM clase_cidr WHERE id=%d" % self.id)
+        pass
 
     def quitar_puerto(self, puerto, tipo):
         '''
         Agrega subred a la coleccion de subredes en la base de datos. El tipo
         puede ser INSIDE o OUTSIDE
         '''
-        print("DELETE FROM clase_puerto WHERE id=%d" % self.id)
+        pass
