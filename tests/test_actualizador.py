@@ -14,20 +14,21 @@ class ActualizadorTests(unittest.TestCase):
     def setUp(self):
         self.actualizador = netcop.Actualizador()
 
-    def test_hay_actualizacion(self):
+    @patch.object(netcop.Actualizador, 'obtener_version_actual')
+    @patch.object(netcop.Actualizador, 'obtener_version_disponible')
+    def test_hay_actualizacion(self, mock_disponible, mock_actual):
         '''
         Prueba que el metodo hay_actualizacion devuelva verdadero cuando
         la ultima version aplicada sea distinta a la ultima version disponible.
         '''
         # preparo datos
-        self.actualizador.version_actual = 'a'
-        self.actualizador.version_disponible = 'b'
+        mock_actual.return_value = 'a'
+        mock_disponible.return_value = 'b'
         # llamo metodo a probar
         assert self.actualizador.hay_actualizacion()
 
         # preparo datos
-        self.actualizador.version_actual = 'b'
-        self.actualizador.version_disponible = 'b'
+        mock_actual.return_value = 'b'
         # llamo metodo a probar
         assert not self.actualizador.hay_actualizacion()
 
@@ -382,3 +383,7 @@ class ActualizadorTests(unittest.TestCase):
     @unittest.skip("no implementado")
     def test_descargar_actualizacion(self):
         pass
+
+
+if __name__ == '__main__':
+    unittest.main()

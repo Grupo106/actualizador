@@ -35,8 +35,6 @@ class Actualizador:
         '''
         Obtiene la ultima version aplicada y la ultima version disponible.
         '''
-        self.version_actual = self.obtener_version_actual()
-        self.version_disponible = self.obtener_version_disponible()
 
     def obtener_version_actual(self):
         '''
@@ -80,6 +78,8 @@ class Actualizador:
         Lee la ultima version aplicada desde el archivo declarado en
         ´config.LOCAL_VERSION´
         '''
+        self.version_actual = self.obtener_version_actual()
+        self.version_disponible = self.obtener_version_disponible()
         syslog.syslog(
             syslog.LOG_DEBUG,
             "Version disponible: %s - Version aplicada: %s" % 
