@@ -13,12 +13,12 @@ trafico en formato JSON, parsea los objetos y guarda los cambios
 en la base de datos
 
 ## Instalacion
-´´´python
+```python
 python setup.py install
-´´´
+```
 
 ## Configuracion
-Editar archivo netcop/config.py
+Editar archivo `netcop/config.py`
 
 ## Logging
 Los logs se guardan mediante el demonio syslog de Unix (Journalctl
