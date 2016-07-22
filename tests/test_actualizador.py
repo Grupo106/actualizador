@@ -32,7 +32,7 @@ class ActualizadorTests(unittest.TestCase):
         # llamo metodo a probar
         assert not self.actualizador.hay_actualizacion()
 
-    @patch('netcop.actualizador.open')
+    @patch('netcop.actualizador.open', create=True)
     def test_obtener_version_actual(self, mock):
         '''
         Prueba que se lea el archivo que almacena la ultima version aplicada
@@ -47,7 +47,7 @@ class ActualizadorTests(unittest.TestCase):
         assert version == 'v1'
 
     @patch('syslog.syslog')
-    @patch('netcop.actualizador.open')
+    @patch('netcop.actualizador.open', create=True)
     def test_obtener_version_actual_fail(self, mock_open, mock_syslog):
         '''
         Prueba el tratamiento del error en caso de no poder leer el archivo de
@@ -62,7 +62,7 @@ class ActualizadorTests(unittest.TestCase):
         mock_syslog.assert_called_once()
         assert version is None
 
-    @patch('netcop.actualizador.open')
+    @patch('netcop.actualizador.open', create=True)
     def test_guardar_version_actual(self, mock):
         '''
         Prueba guardar la ultima version aplicada en el archivo de versiones
@@ -79,7 +79,7 @@ class ActualizadorTests(unittest.TestCase):
         handle.write.assert_called_once_with('pepe')
 
     @patch('syslog.syslog')
-    @patch('netcop.actualizador.open')
+    @patch('netcop.actualizador.open', create=True)
     def test_guardar_version_actual_fail(self, mock_open, mock_syslog):
         '''
         Prueba el tratamiento del error en caso de no poder guardar la ultima
