@@ -432,6 +432,17 @@ class ActualizadorTests(unittest.TestCase):
         for clase in clases:
             assert clase in descarga
 
+    @patch('requests.get')
+    def test_descargar_actualizacion_error(self, mock_get):
+        '''
+        Prueba el tratamiento de error al descargar la ultima version
+        '''
+        # preparo datos   
+        mock_get.side_effect = IOError()
+        # llamo metodo a probar
+        with self.assertRaises(IOError):
+            self.actualizador.descargar_actualizacion()
+
 
 if __name__ == '__main__':
     unittest.main()
