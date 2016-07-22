@@ -6,7 +6,7 @@ Se prueban todos los metodos de la clase ´Actualizador´
 '''
 import netcop
 import unittest
-from mock import patch, mock_open, Mock, call
+from mock import patch, mock_open, Mock, call, Mock
 
 
 class ActualizadorTests(unittest.TestCase):
@@ -376,13 +376,61 @@ class ActualizadorTests(unittest.TestCase):
         assert 80 in ret.puertos_outside
         assert ret.puertos_inside is None
 
-    @unittest.skip("no implementado")
-    def test_consultar_version_disponible(self):
-        pass
+    @patch('requests.get')
+    def test_consultar_version_disponible(self, mock_get):
+        '''
+        Prueba obtener la ultima version disponible desde el servidor.
+        '''
+        # preparo datos   
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json = Mock(return_value={'version': 'a'})
+        mock_get.return_value = mock_response
+        # llamo metodo a probar
+        version = self.actualizador.obtener_version_disponible()
+        # verifico que todo este bien
+        assert version == 'a'
 
-    @unittest.skip("no implementado")
-    def test_descargar_actualizacion(self):
-        pass
+    @patch('requests.get')
+    def test_consultar_version_disponible_error(self, mock_get):
+        '''
+        Prueba el tratamiento de error al obtener la ultima version disponible
+        '''
+        # preparo datos   
+        mock_get.side_effect = IOError()
+        # llamo metodo a probar
+        with self.assertRaises(IOError):
+            self.actualizador.obtener_version_disponible()
+
+    @patch('requests.get')
+    def test_descargar_actualizacion(self, mock_get):
+        '''
+        Prueba la descarga de la ultima version desde el servidor. Debe
+        retornar una lista de clases de trafico en forma de diccionarios.
+        '''
+        # preparo datos   
+        clases = [
+            {
+                'id': 1,
+                'nombre': 'foo',
+                'descripcion': 'bar',
+            },
+            {
+                'id': 2,
+                'nombre': 'fulano',
+                'descripcion': 'mengano',
+            },
+        ]
+
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json = Mock(return_value={'clases': clases})
+        mock_get.return_value = mock_response
+        # llamo metodo a probar
+        descarga = self.actualizador.descargar_actualizacion()
+        # verifico que todo este bien
+        for clase in clases:
+            assert clase in descarga
 
 
 if __name__ == '__main__':
