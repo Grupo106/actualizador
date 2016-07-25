@@ -140,7 +140,7 @@ class ActualizadorTests(unittest.TestCase):
                 'subredes_outside': ['1.1.1.1/32', '2.2.2.0/24'],
                 'subredes_inside': ['3.3.3.3/32'],
                 'puertos_outside': ['80/tcp', '443/tcp'],
-                'puertos_inside': ['1024/tcp'],
+                'puertos_inside': ['1024/udp'],
             }
             # llamo metodo a probar
             self.actualizador.aplicar_actualizacion(clase)
@@ -150,11 +150,36 @@ class ActualizadorTests(unittest.TestCase):
             )
             assert saved.nombre == 'pepe'
             assert saved.descripcion == 'clase de prueba'
-            assert (models.ClaseCIDR
-                    .select()
-                    .join(models.CIDR)
-                    .where(models.ClaseCIDR.id_clase == 60606060)
-                    .get())
+            # verifico redes
+            redes = (('1.1.1.1', 32, models.OUTSIDE),
+                     ('2.2.2.0', 24, models.OUTSIDE),
+                     ('3.3.3.3', 32, models.INSIDE))
+            for i in saved.redes:
+                print(str(i))
+            for i in saved.puertos:
+                print(str(i))
+            for (direccion, prefijo, grupo) in redes:
+                assert (models.ClaseCIDR
+                        .select()
+                        .join(models.CIDR)
+                        .where(models.ClaseCIDR.clase == 60606060,
+                               models.CIDR.direccion == direccion,
+                               models.CIDR.prefijo == prefijo,
+                               models.ClaseCIDR.grupo == grupo)
+                        .get())
+            # verifico puertos
+            puertos = ((80, 6, models.OUTSIDE),
+                       (443, 6, models.OUTSIDE),
+                       (1024, 17, models.INSIDE))
+            for (numero, protocolo, grupo) in puertos:
+                assert (models.ClasePuerto
+                        .select()
+                        .join(models.Puerto)
+                        .where(models.ClasePuerto.clase == 60606060,
+                               models.Puerto.numero == numero,
+                               models.Puerto.protocolo == protocolo,
+                               models.ClasePuerto.grupo == grupo)
+                        .get())
             # descarto cambios en la base de datos
             transaction.rollback()
 

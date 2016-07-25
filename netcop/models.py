@@ -39,6 +39,7 @@ class ClaseTrafico(models.Model):
         database = db
         db_table = u'clase_trafico'
 
+
 class CIDR(models.Model):
     '''
     El CIDR representa una subred. Se compone de una dirección de red y una
@@ -93,35 +94,37 @@ class ClaseCIDR(models.Model):
     '''
     Relaciona una clase de trafico con un CIDR.
     '''
-    id_clase = models.ForeignKeyField(ClaseTrafico, related_name='redes',
-                                      db_column='id_clase')
-    id_cidr = models.ForeignKeyField(CIDR, related_name='clases',
-                                     db_column='id_cidr')
+    clase = models.ForeignKeyField(ClaseTrafico, related_name='redes',
+                                   db_column='id_clase')
+    cidr = models.ForeignKeyField(CIDR, related_name='clases',
+                                  db_column='id_cidr')
     grupo = models.FixedCharField(max_length=1)
 
     def __str__(self):
-        return u"clase=%d cidr=%d" % (self.id_clase, self.id_cidr)
+        return u"clase=%d cidr=%d" % (self.clase.id_clase,
+                                      self.cidr.id_cidr)
 
     class Meta:
         database = db
         db_table = u'clase_cidr'
-        primary_key = models.CompositeKey('id_clase', 'id_cidr')
+        primary_key = models.CompositeKey('clase', 'cidr')
 
 
 class ClasePuerto(models.Model):
     '''
     Relaciona una clase de trafico con un puerto.
     '''
-    id_clase = models.ForeignKeyField(ClaseTrafico, related_name='puertos',
-                                      db_column='id_clase')
-    id_puerto = models.ForeignKeyField(Puerto, related_name='clases',
-                                       db_column='id_puerto')
+    clase = models.ForeignKeyField(ClaseTrafico, related_name='puertos',
+                                   db_column='id_clase')
+    puerto = models.ForeignKeyField(Puerto, related_name='clases',
+                                    db_column='id_puerto')
     grupo = models.FixedCharField(max_length=1)
 
     def __str__(self):
-        return u"clase=%d puerto=%d" % (self.id_clase, self.id_puerto)
+        return u"clase=%d puerto=%d" % (self.clase.id_clase,
+                                        self.puerto.id_puerto)
 
     class Meta:
         database = db
         db_table = u'clase_puerto'
-        primary_key = models.CompositeKey('id_clase', 'id_puerto')
+        primary_key = models.CompositeKey('clase', 'puerto')

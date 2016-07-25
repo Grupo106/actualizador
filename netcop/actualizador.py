@@ -16,8 +16,7 @@ Las versiones se descargan en formato JSON.
 import sys
 import syslog
 import requests
-from netcop import config
-from netcop.models import *
+from netcop import config, models
 
 
 class Actualizador:
@@ -92,12 +91,12 @@ class Actualizador:
         Guarda los cambios en la clase de trafico.
         '''
         assert nueva.get('id') is not None
-        query = ClaseTrafico.select().where(
-            ClaseTrafico.id_clase == nueva['id']
+        query = models.ClaseTrafico.select().where(
+            models.ClaseTrafico.id_clase == nueva['id']
         )
         # si la clase no existe creo una nueva
         if len(query) == 0:
-            clase = ClaseTrafico.create(
+            clase = models.ClaseTrafico.create(
                 id_clase=nueva["id"],
                 nombre=nueva.get("nombre", ""),
                 descripcion=nueva.get("descripcion", ""),
@@ -114,32 +113,37 @@ class Actualizador:
         return clase
 
     def actualizar_colecciones(self, clase, nueva):
-        redes = (('subredes_outside', OUTSIDE),
-                 ('subredes_inside', INSIDE))
-        puertos = (('puertos_outside', OUTSIDE),
-                   ('puertos_inside', INSIDE))
+        redes = (('subredes_outside', models.OUTSIDE),
+                 ('subredes_inside', models.INSIDE))
+        puertos = (('puertos_outside', models.OUTSIDE),
+                   ('puertos_inside', models.INSIDE))
 
-        ClaseCIDR.delete().where(ClaseCIDR.id_clase == clase.id_clase)
-        ClasePuerto.delete().where(ClasePuerto.id_clase == clase.id_clase)
+        models.ClaseCIDR.delete().where(
+            models.ClaseCIDR.clase == clase)
+        models.ClasePuerto.delete().where(
+            models.ClasePuerto.clase == clase)
         for lista, grupo in redes:
             for item in nueva.get(lista, []):
-                (direccion, prefijo) = item.split('/') 
-                cidr = CIDR.get_or_create(direccion=direccion,
-                                          prefijo=prefijo)[0]
-                ClaseCIDR.create(id_clase=clase.id_clase,
-                                 id_cidr=cidr.id_cidr,
-                                 grupo=grupo)
+                (direccion, prefijo) = item.split('/')
+                cidr = models.CIDR.get_or_create(direccion=direccion,
+                                                 prefijo=prefijo)[0]
+                models.ClaseCIDR.create(clase=clase, cidr=cidr, grupo=grupo)
         for lista, grupo in puertos:
             for item in nueva.get(lista, []):
-                (numero, protocolo) = item.split('/') 
-                protocolo = 6 if protocolo == "TCP" else 17
-                puerto = Puerto.get_or_create(numero=numero,
-                                            protocolo=protocolo)[0]
-                ClasePuerto.create(id_clase=clase.id_clase,
-                                   id_puerto=puerto.id_puerto,
-                                   grupo=grupo)
+                (numero, proto) = item.split('/')
+                # asigno numero de protocolo
+                if proto == 'TCP':
+                    protocolo = 6
+                elif proto == 'UDP':
+                    protocolo = 17
+                else:
+                    protocolo = 0
+                puerto = models.Puerto.get_or_create(numero=numero,
+                                                     protocolo=protocolo)[0]
+                models.ClasePuerto.create(clase=clase, puerto=puerto,
+                                          grupo=grupo)
 
-    @db.atomic()
+    @models.db.atomic()
     def actualizar(self):
         '''
         Aplica la actualizacion de la base de firmas a la ultima version
@@ -150,8 +154,8 @@ class Actualizador:
 
         Devuelve verdadero si alguna clase fue modificada
         '''
-        syslog.syslog( syslog.LOG_DEBUG, "Actualizando a la version: %s" %
-                                          self.version_disponible[0:6])
+        syslog.syslog(syslog.LOG_DEBUG, "Actualizando a la version: %s" %
+                                        self.version_disponible[0:6])
 
         # descarga y aplica la actualizacion
         for clase in self.descargar_actualizacion():
