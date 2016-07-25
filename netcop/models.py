@@ -80,10 +80,10 @@ class Puerto(models.Model):
     def __str__(self):
         proto = str(self.protocolo)
         if self.protocolo == 6:
-            proto = "TCP"
+            proto = "tcp"
         elif self.protocolo == 17:
-            proto = "UDP"
-        return u"%d: %s/%d" % (self.id_puerto, self.numero, proto)
+            proto = "udp"
+        return u"%d: %s/%s" % (self.id_puerto, self.numero, proto)
 
     class Meta:
         database = db

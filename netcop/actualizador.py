@@ -120,6 +120,9 @@ class Actualizador:
         puertos = (('puertos_outside', models.OUTSIDE),
                    ('puertos_inside', models.INSIDE))
 
+        models.ClaseCIDR.delete().where(models.ClaseCIDR.clase == clase)
+        models.ClasePuerto.delete().where(models.ClasePuerto.clase == clase)
+
         for lista, grupo in redes:
             for item in nueva.get(lista, []):
                 (direccion, prefijo) = item.split('/')
@@ -152,7 +155,7 @@ class Actualizador:
         elif string.lower() == 'udp':
             return 17
         return 0
-        
+
     @models.db.atomic()
     def actualizar(self):
         '''
