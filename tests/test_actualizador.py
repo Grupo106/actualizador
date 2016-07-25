@@ -13,6 +13,10 @@ from netcop import models
 class ActualizadorTests(unittest.TestCase):
 
     def setUp(self):
+        netcop.models.db.create_tables(
+            [models.ClaseTrafico, models.CIDR, models.Puerto, models.ClaseCIDR,
+             models.ClasePuerto],
+            safe=True)
         self.actualizador = netcop.Actualizador()
 
     @patch.object(netcop.Actualizador, 'obtener_version_actual')
