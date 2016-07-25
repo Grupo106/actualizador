@@ -101,13 +101,14 @@ class ClaseCIDR(models.Model):
     grupo = models.FixedCharField(max_length=1)
 
     def __str__(self):
-        return u"clase=%d cidr=%d" % (self.clase.id_clase,
-                                      self.cidr.id_cidr)
+        return u"clase=%d cidr=%d %s" % (self.clase.id_clase,
+                                         self.cidr.id_cidr,
+                                         self.grupo)
 
     class Meta:
         database = db
         db_table = u'clase_cidr'
-        primary_key = models.CompositeKey('clase', 'cidr')
+        primary_key = models.CompositeKey('clase', 'cidr', 'grupo')
 
 
 class ClasePuerto(models.Model):
@@ -121,10 +122,11 @@ class ClasePuerto(models.Model):
     grupo = models.FixedCharField(max_length=1)
 
     def __str__(self):
-        return u"clase=%d puerto=%d" % (self.clase.id_clase,
-                                        self.puerto.id_puerto)
+        return u"clase=%d puerto=%d %s" % (self.clase.id_clase,
+                                           self.puerto.id_puerto,
+                                           self.grupo)
 
     class Meta:
         database = db
         db_table = u'clase_puerto'
-        primary_key = models.CompositeKey('clase', 'puerto')
+        primary_key = models.CompositeKey('clase', 'puerto', 'grupo')

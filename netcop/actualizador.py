@@ -91,7 +91,7 @@ class Actualizador:
         Guarda los cambios en la clase de trafico.
         '''
         assert nueva.get('id') is not None
-        clase, creada = models.ClaseTrafico.get_or_create(
+        clase, creada = models.ClaseTrafico.create_or_get(
             id_clase=nueva["id"],
             nombre=nueva.get("nombre", ""),
             descripcion=nueva.get("descripcion", ""),
@@ -112,22 +112,21 @@ class Actualizador:
         return clase
 
     def actualizar_colecciones(self, clase, nueva):
+        '''
+        Actualiza las listas de subredes y puertos de la clase de trafico.
+        '''
         redes = (('subredes_outside', models.OUTSIDE),
                  ('subredes_inside', models.INSIDE))
         puertos = (('puertos_outside', models.OUTSIDE),
                    ('puertos_inside', models.INSIDE))
-
-        models.ClaseCIDR.delete().where(
-            models.ClaseCIDR.clase == clase)
-        models.ClasePuerto.delete().where(
-            models.ClasePuerto.clase == clase)
 
         for lista, grupo in redes:
             for item in nueva.get(lista, []):
                 (direccion, prefijo) = item.split('/')
                 cidr = models.CIDR.get_or_create(direccion=direccion,
                                                  prefijo=prefijo)[0]
-                models.ClaseCIDR.create(clase=clase, cidr=cidr, grupo=grupo)
+                models.ClaseCIDR.create_or_get(clase=clase, cidr=cidr,
+                                               grupo=grupo)
 
         for lista, grupo in puertos:
             for item in nueva.get(lista, []):
@@ -135,8 +134,8 @@ class Actualizador:
                 protocolo = self.protocolo(proto)
                 puerto = models.Puerto.get_or_create(numero=numero,
                                                      protocolo=protocolo)[0]
-                models.ClasePuerto.create(clase=clase, puerto=puerto,
-                                          grupo=grupo)
+                models.ClasePuerto.create_or_get(clase=clase, puerto=puerto,
+                                                 grupo=grupo)
 
     def protocolo(self, string):
         '''
