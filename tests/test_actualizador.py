@@ -349,8 +349,6 @@ class ActualizadorTests(unittest.TestCase):
             saved = models.ClaseTrafico.get(
                 models.ClaseTrafico.id_clase == 60606060
             )
-            for i in saved.puertos:
-                print(str(i.puerto), i.grupo)
             puertos = ((443,   6, models.OUTSIDE),
                        (80,    6, models.OUTSIDE),
                        (1024, 17, models.INSIDE))

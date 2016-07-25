@@ -7,6 +7,7 @@ import netcop
 if __name__ == "__main__":
     syslog.openlog('actualizador')
     try:
+        netcop.models.db.connect()
         actualizador = netcop.Actualizador()
         if actualizador.hay_actualizacion():
             actualizador.actualizar()
@@ -18,3 +19,4 @@ if __name__ == "__main__":
         sys.exit(1)
     finally:
         syslog.closelog()
+        netcop.models.db.close()
