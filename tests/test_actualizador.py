@@ -150,14 +150,13 @@ class ActualizadorTests(unittest.TestCase):
             )
             assert saved.nombre == 'pepe'
             assert saved.descripcion == 'clase de prueba'
-            # verifico redes
             redes = (('1.1.1.1', 32, models.OUTSIDE),
                      ('2.2.2.0', 24, models.OUTSIDE),
                      ('3.3.3.3', 32, models.INSIDE))
-            for i in saved.redes:
-                print(str(i))
-            for i in saved.puertos:
-                print(str(i))
+            puertos = ((80, 6, models.OUTSIDE),
+                       (443, 6, models.OUTSIDE),
+                       (1024, 17, models.INSIDE))
+            # verifico redes
             for (direccion, prefijo, grupo) in redes:
                 assert (models.ClaseCIDR
                         .select()
@@ -168,9 +167,6 @@ class ActualizadorTests(unittest.TestCase):
                                models.ClaseCIDR.grupo == grupo)
                         .get())
             # verifico puertos
-            puertos = ((80, 6, models.OUTSIDE),
-                       (443, 6, models.OUTSIDE),
-                       (1024, 17, models.INSIDE))
             for (numero, protocolo, grupo) in puertos:
                 assert (models.ClasePuerto
                         .select()

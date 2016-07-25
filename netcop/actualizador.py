@@ -91,19 +91,18 @@ class Actualizador:
         Guarda los cambios en la clase de trafico.
         '''
         assert nueva.get('id') is not None
+        clase, creada = models.ClaseTrafico.get_or_create(
+            id_clase=nueva["id"],
+            nombre=nueva.get("nombre", ""),
+            descripcion=nueva.get("descripcion", ""),
+            activa=nueva.get("activa", True),
+        )
+
         query = models.ClaseTrafico.select().where(
             models.ClaseTrafico.id_clase == nueva['id']
         )
-        # si la clase no existe creo una nueva
-        if len(query) == 0:
-            clase = models.ClaseTrafico.create(
-                id_clase=nueva["id"],
-                nombre=nueva.get("nombre", ""),
-                descripcion=nueva.get("descripcion", ""),
-                activa=nueva.get("activa", True),
-            )
-        else:
-            # actualizo nombre y descripcion
+        # si la clase existe actualizo sus campos
+        if not creada:
             clase = query.first()
             clase.nombre = nueva.get("nombre", "")
             clase.descripcion = nueva.get("descripcion", "")
@@ -122,27 +121,39 @@ class Actualizador:
             models.ClaseCIDR.clase == clase)
         models.ClasePuerto.delete().where(
             models.ClasePuerto.clase == clase)
+
         for lista, grupo in redes:
             for item in nueva.get(lista, []):
                 (direccion, prefijo) = item.split('/')
                 cidr = models.CIDR.get_or_create(direccion=direccion,
                                                  prefijo=prefijo)[0]
                 models.ClaseCIDR.create(clase=clase, cidr=cidr, grupo=grupo)
+
         for lista, grupo in puertos:
             for item in nueva.get(lista, []):
                 (numero, proto) = item.split('/')
-                # asigno numero de protocolo
-                if proto == 'TCP':
-                    protocolo = 6
-                elif proto == 'UDP':
-                    protocolo = 17
-                else:
-                    protocolo = 0
+                protocolo = self.protocolo(proto)
                 puerto = models.Puerto.get_or_create(numero=numero,
                                                      protocolo=protocolo)[0]
                 models.ClasePuerto.create(clase=clase, puerto=puerto,
                                           grupo=grupo)
 
+    def protocolo(self, string):
+        '''
+        Obtiene el numero de protocolo en base a una cadena de caracteres.
+
+        Retornos
+        ---------------
+          * 6 - TCP | tcp
+          * 17 - UDP | udp
+          * 0 en cualquier otro caso.
+        '''
+        if string.lower() == 'tcp':
+            return 6
+        elif string.lower() == 'udp':
+            return 17
+        return 0
+        
     @models.db.atomic()
     def actualizar(self):
         '''
