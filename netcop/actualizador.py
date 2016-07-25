@@ -17,7 +17,7 @@ import sys
 import syslog
 import requests
 from netcop import config
-from netcop.models import ClaseTrafico
+from netcop.models import *
 
 
 class Actualizador:
@@ -87,74 +87,59 @@ class Actualizador:
         )
         return self.version_actual != self.version_disponible
 
-    def aplicar_actualizacion(self, clase):
+    def aplicar_actualizacion(self, nueva):
         '''
         Guarda los cambios en la clase de trafico.
         '''
-        assert clase.get('id') is not None
-        actual = ClaseTrafico.get(clase['id'])
-        # si la clase no existe
-        if actual is None:
-            actual = ClaseTrafico()
-        # actualizo nombre y descripcion
-        self.actualizar_colecciones(actual, clase)
-        actual.load(**clase)
-        actual.save()
-        return actual
-
-    def actualizar_colecciones(self, viejo, nuevo):
-        '''
-        Actualiza las colecciones de subredes y puertos de las clases de
-        trafico de todos los grupos (inside o outside).
-
-        El parametro *viejo* debe ser una instancia de ClaseTrafico y el
-        parametro *nuevo* debe ser un diccionario que contenga la nueva
-        informacion a actualizar.
-        '''
-        colecciones = (
-            ('subredes_outside', 'subred', ClaseTrafico.OUTSIDE),
-            ('subredes_inside', 'subred', ClaseTrafico.INSIDE),
-            ('puertos_outside', 'puerto', ClaseTrafico.OUTSIDE),
-            ('puertos_inside', 'puerto', ClaseTrafico.INSIDE),
+        assert nueva.get('id') is not None
+        query = ClaseTrafico.select().where(
+            ClaseTrafico.id_clase == nueva['id']
         )
-        for (coleccion, metodo, grupo) in colecciones:
-            (agregar, quitar) = self.diferencia(coleccion, viejo, nuevo)
-            for item in agregar:
-                getattr(viejo, 'agregar_%s' % metodo)(item, grupo)
-            for item in quitar:
-                getattr(viejo, 'quitar_%s' % metodo)(item, grupo)
+        # si la clase no existe creo una nueva
+        if len(query) == 0:
+            clase = ClaseTrafico.create(
+                id_clase=nueva["id"],
+                nombre=nueva.get("nombre", ""),
+                descripcion=nueva.get("descripcion", ""),
+                activa=nueva.get("activa", True),
+            )
+        else:
+            # actualizo nombre y descripcion
+            clase = query.first()
+            clase.nombre = nueva.get("nombre", "")
+            clase.descripcion = nueva.get("descripcion", "")
+            clase.activa = nueva.get("activa", True)
+            clase.save()
+        self.actualizar_colecciones(clase, nueva)
+        return clase
 
-    def diferencia(self, nombre_coleccion, viejo, nuevo):
-        '''
-        Obtiene la diferencia entre dos colecciones indicando los items de la
-        vieja coleccion que se tienen que borrar y cuales se tienen que agregar
+    def actualizar_colecciones(self, clase, nueva):
+        redes = (('subredes_outside', OUTSIDE),
+                 ('subredes_inside', INSIDE))
+        puertos = (('puertos_outside', OUTSIDE),
+                   ('puertos_inside', INSIDE))
 
-        El parametro *viejo* debe ser una instancia de ClaseTrafico y el
-        parametro *nuevo* debe ser un diccionario que contenga la nueva
-        informacion a actualizar.
+        ClaseCIDR.delete().where(ClaseCIDR.id_clase == clase.id_clase)
+        ClasePuerto.delete().where(ClasePuerto.id_clase == clase.id_clase)
+        for lista, grupo in redes:
+            for item in nueva.get(lista, []):
+                (direccion, prefijo) = item.split('/') 
+                cidr = CIDR.get_or_create(direccion=direccion,
+                                          prefijo=prefijo)[0]
+                ClaseCIDR.create(id_clase=clase.id_clase,
+                                 id_cidr=cidr.id_cidr,
+                                 grupo=grupo)
+        for lista, grupo in puertos:
+            for item in nueva.get(lista, []):
+                (numero, protocolo) = item.split('/') 
+                protocolo = 6 if protocolo == "TCP" else 17
+                puerto = Puerto.get_or_create(numero=numero,
+                                            protocolo=protocolo)[0]
+                ClasePuerto.create(id_clase=clase.id_clase,
+                                   id_puerto=puerto.id_puerto,
+                                   grupo=grupo)
 
-        Devuelve una tupla (agregar, quitar) donde agregar son los items que
-        le faltan a la coleccion vieja y quitar son los items que le sobran a
-        la collecion vieja
-        '''
-        new = nuevo.get(nombre_coleccion)
-        old = getattr(viejo, nombre_coleccion)
-        agregar = []
-        quitar = []
-        # agregar
-        if new:
-            if old:
-                agregar = (set(new) - set(old))
-            else:
-                agregar = new
-        # quitar
-        if old:
-            if new:
-                quitar = (set(old) - set(new))
-            else:
-                quitar = old
-        return (agregar, quitar)
-
+    @db.atomic()
     def actualizar(self):
         '''
         Aplica la actualizacion de la base de firmas a la ultima version
@@ -165,13 +150,10 @@ class Actualizador:
 
         Devuelve verdadero si alguna clase fue modificada
         '''
-        syslog.syslog(
-            syslog.LOG_DEBUG,
-            "Actualizando a la version: %s" % self.version_disponible[0:6]
-        )
+        syslog.syslog( syslog.LOG_DEBUG, "Actualizando a la version: %s" %
+                                          self.version_disponible[0:6])
 
         # descarga y aplica la actualizacion
-        # TODO transacciones
         for clase in self.descargar_actualizacion():
             self.aplicar_actualizacion(clase)
 
@@ -185,18 +167,7 @@ class Actualizador:
         Obtiene el numero de la ultima version de firmas disponibles desde el
         servidor de firmas.
         '''
-        try:
-            r = requests.get(config.URL_VERSION)
-            if r.status_code == 200:
-                return r.json()['version']
-            raise Exception("Respuesta del servidor: %d" % r.status_code)
-        except:
-            sys.stderr.write("No se pudo actualizar: "
-                             "%s no está disponible\n" % config.URL_VERSION)
-            syslog.syslog(syslog.LOG_CRIT,
-                          "No se pudo actualizar: %s no está disponible" %
-                          config.URL_VERSION)
-            raise
+        return self.obtener_servidor(config.URL_VERSION)["version"]
 
     def descargar_actualizacion(self):
         '''
@@ -204,15 +175,20 @@ class Actualizador:
         clases de trafico.
         '''
         syslog.syslog(syslog.LOG_DEBUG, "Descargando ultima versión")
+        return self.obtener_servidor(config.URL_DOWNLOAD)["clases"]
+
+    def obtener_servidor(self, url):
+        '''
+        Obtiene informacion del servidor de actualizaciones
+        '''
         try:
-            r = requests.get(config.URL_DOWNLOAD)
-            if r.status_code == 200:
-                return r.json()['clases']
+            r = requests.get(url)
+            if 200 <= r.status_code < 300:
+                return r.json()
             raise Exception("Respuesta del servidor: %d" % r.status_code)
         except:
-            sys.stderr.write("No se pudo actualizar: "
-                             "%s no está disponible\n" % config.URL_VERSION)
+            sys.stderr.write("No se pudo actualizar: %s no está disponible\n" %
+                             url)
             syslog.syslog(syslog.LOG_CRIT,
-                          "No se pudo actualizar: %s no está disponible" %
-                          config.URL_VERSION)
+                          "No se pudo actualizar: %s no está disponible" % url)
             raise

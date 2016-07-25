@@ -7,6 +7,7 @@ Se prueban todos los metodos de la clase ´Actualizador´
 import netcop
 import unittest
 from mock import patch, mock_open, Mock, call
+from netcop import models
 
 
 class ActualizadorTests(unittest.TestCase):
@@ -125,37 +126,37 @@ class ActualizadorTests(unittest.TestCase):
         assert mock_aplicar.call_count == 2
         assert self.actualizador.version_actual == 'b'
 
-    @unittest.skip("Adaptar a peewee")
-    @patch.object(netcop.ClaseTrafico, 'save')
-    @patch.object(netcop.ClaseTrafico, 'get')
-    def test_aplicar_actualizacion_nueva(self, mock_get, mock_save):
+    def test_aplicar_actualizacion_nueva(self):
         '''
         Prueba el metodo aplicar_actualizacion con una clase inexistente
         '''
-        # preparo datos
-        mock_get.return_value = None
-        clase = {
-            'id': 1,
-            'nombre': 'pepe',
-            'descripcion': 'clase de prueba',
-            'subredes_outside': ['1.1.1.1/32', '2.2.2.0/24'],
-            'subredes_inside': ['3.3.3.3/32'],
-            'puertos_outside': [80, 443],
-            'puertos_inside': [1024],
-        }
-        # llamo metodo a probar
-        ret = self.actualizador.aplicar_actualizacion(clase)
-        # verifico que todo este bien
-        mock_get.assert_called_once_with(1)
-        mock_save.assert_called_once()
-        assert ret.id == 1
-        assert ret.descripcion == 'clase de prueba'
-        assert '1.1.1.1/32' in ret.subredes_outside
-        assert '2.2.2.0/24' in ret.subredes_outside
-        assert '3.3.3.3/32' in ret.subredes_inside
-        assert 80 in ret.puertos_outside
-        assert 443 in ret.puertos_outside
-        assert 1024 in ret.puertos_inside
+        # creo transaccion para descartar cambios generados en la base
+        with models.db.atomic() as transaction:
+            # preparo datos
+            clase = {
+                'id': 60606060,
+                'nombre': 'pepe',
+                'descripcion': 'clase de prueba',
+                'subredes_outside': ['1.1.1.1/32', '2.2.2.0/24'],
+                'subredes_inside': ['3.3.3.3/32'],
+                'puertos_outside': ['80/tcp', '443/tcp'],
+                'puertos_inside': ['1024/tcp'],
+            }
+            # llamo metodo a probar
+            self.actualizador.aplicar_actualizacion(clase)
+            # verifico que todo este bien
+            saved = models.ClaseTrafico.get(
+                models.ClaseTrafico.id_clase == 60606060
+            )
+            assert saved.nombre == 'pepe'
+            assert saved.descripcion == 'clase de prueba'
+            assert (models.ClaseCIDR
+                    .select()
+                    .join(models.CIDR)
+                    .where(models.ClaseCIDR.id_clase == 60606060)
+                    .get())
+            # descarto cambios en la base de datos
+            transaction.rollback()
 
     @unittest.skip("Adaptar a peewee")
     @patch.object(netcop.ClaseTrafico, 'save')

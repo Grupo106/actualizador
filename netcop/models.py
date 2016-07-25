@@ -32,10 +32,12 @@ class ClaseTrafico(models.Model):
     tipo = models.SmallIntegerField(default=0)
     activa = models.BooleanField(default=True)
 
+    def __str__(self):
+        return u"%d: %s" % (self.id_clase, self.nombre)
+
     class Meta:
         database = db
         db_table = u'clase_trafico'
-
 
 class CIDR(models.Model):
     '''
@@ -54,6 +56,9 @@ class CIDR(models.Model):
     direccion = models.CharField(max_length=32)
     prefijo = models.SmallIntegerField(default=0)
 
+    def __str__(self):
+        return u"%d: %s/%d" % (self.id_cidr, self.direccion, self.prefijo)
+
     class Meta:
         database = db
         db_table = u'cidr'
@@ -71,6 +76,14 @@ class Puerto(models.Model):
     numero = models.IntegerField()
     protocolo = models.SmallIntegerField(default=0)
 
+    def __str__(self):
+        proto = str(self.protocolo)
+        if self.protocolo == 6:
+            proto = "TCP"
+        elif self.protocolo == 17:
+            proto = "UDP"
+        return u"%d: %s/%d" % (self.id_puerto, self.numero, proto)
+
     class Meta:
         database = db
         db_table = u'puerto'
@@ -80,9 +93,14 @@ class ClaseCIDR(models.Model):
     '''
     Relaciona una clase de trafico con un CIDR.
     '''
-    id_clase = models.ForeignKeyField(ClaseTrafico)
-    id_cidr = models.ForeignKeyField(CIDR)
+    id_clase = models.ForeignKeyField(ClaseTrafico, related_name='redes',
+                                      db_column='id_clase')
+    id_cidr = models.ForeignKeyField(CIDR, related_name='clases',
+                                     db_column='id_cidr')
     grupo = models.FixedCharField(max_length=1)
+
+    def __str__(self):
+        return u"clase=%d cidr=%d" % (self.id_clase, self.id_cidr)
 
     class Meta:
         database = db
@@ -94,9 +112,14 @@ class ClasePuerto(models.Model):
     '''
     Relaciona una clase de trafico con un puerto.
     '''
-    id_clase = models.ForeignKeyField(ClaseTrafico)
-    id_puerto = models.ForeignKeyField(Puerto)
+    id_clase = models.ForeignKeyField(ClaseTrafico, related_name='puertos',
+                                      db_column='id_clase')
+    id_puerto = models.ForeignKeyField(Puerto, related_name='clases',
+                                       db_column='id_puerto')
     grupo = models.FixedCharField(max_length=1)
+
+    def __str__(self):
+        return u"clase=%d puerto=%d" % (self.id_clase, self.id_puerto)
 
     class Meta:
         database = db
