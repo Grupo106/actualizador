@@ -366,36 +366,49 @@ class ActualizadorTests(unittest.TestCase):
             # descarto cambios en la base de datos
             transaction.rollback()
 
-    @unittest.skip("Adaptar a peewee")
-    def test_aplicar_actualizacion_eliminar_subred(self, mock_get, mock_save,
-                                                   mock_quitar):
+    def test_aplicar_actualizacion_eliminar_subred(self):
         '''
         Prueba el metodo aplicar_actualizacion con una clase existente que
         tenga menos subredes
         '''
-        # preparo datos
-        mock_get.return_value = netcop.ClaseTrafico(
-            id=1,
-            nombre='foo',
-            descripcion='bar',
-            subredes_outside=['1.1.1.1/32', '2.2.2.0/24', '3.3.0.0/20'],
-            subredes_inside=['4.4.4.4/32'],
-        )
-        clase = {
-            'id': 1,
-            'nombre': 'foo',
-            'descripcion': 'bar',
-            'subredes_outside': ['1.1.1.1/32', '2.2.2.0/24'],
-        }
-        # llamo metodo a probar
-        ret = self.actualizador.aplicar_actualizacion(clase)
-        # verifico que todo este bien
-        mock_quitar.assert_has_calls([
-            call('3.3.0.0/20', netcop.ClaseTrafico.OUTSIDE),
-            call('4.4.4.4/32', netcop.ClaseTrafico.INSIDE),
-        ])
-        assert '3.3.0.0/20' not in ret.subredes_outside
-        assert ret.subredes_inside is None
+        # creo transaccion para descartar cambios generados en la base
+        with models.db.atomic() as transaction:
+            # preparo datos
+            clase = models.ClaseTrafico.create(
+                id_clase=60606060,
+                nombre='foo',
+                descripcion='bar'
+            )
+            cidr = [models.CIDR.create(direccion='1.1.1.1', prefijo=32),
+                    models.CIDR.create(direccion='2.2.2.0', prefijo=24),
+                    models.CIDR.create(direccion='3.3.3.0', prefijo=20)]
+            for item in cidr:
+                models.ClaseCIDR.create(clase=clase, cidr=item,
+                                        grupo=models.OUTSIDE)
+            inside = models.CIDR.create(direccion='4.4.4.4', prefijo=32)
+            models.ClaseCIDR.create(clase=clase, cidr=inside,
+                                    grupo=models.INSIDE)
+            clase = {
+                'id': 60606060,
+                'nombre': 'foo',
+                'descripcion': 'bar',
+                'subredes_outside': ['1.1.1.1/32']
+            }
+            # llamo metodo a probar
+            self.actualizador.aplicar_actualizacion(clase)
+
+            # verifico que todo este bien
+            saved = models.ClaseTrafico.get(
+                models.ClaseTrafico.id_clase == 60606060
+            )
+            assert (saved.redes
+                    .join(models.CIDR)
+                    .where(models.CIDR.direccion == '1.1.1.1',
+                           models.CIDR.prefijo == 32,
+                           models.ClaseCIDR.grupo == models.OUTSIDE)
+                    .get())
+            # descarto cambios en la base de datos
+            transaction.rollback()
 
     @unittest.skip("Adaptar a peewee")
     def test_aplicar_actualizacion_eliminar_puerto(self, mock_get, mock_save,
