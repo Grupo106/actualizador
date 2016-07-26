@@ -120,15 +120,17 @@ class Actualizador:
         puertos = (('puertos_outside', models.OUTSIDE),
                    ('puertos_inside', models.INSIDE))
 
-        models.ClaseCIDR.delete().where(models.ClaseCIDR.clase == clase)
-        models.ClasePuerto.delete().where(models.ClasePuerto.clase == clase)
+        models.ClaseCIDR.delete().where(
+            models.ClaseCIDR.clase == clase).execute()
+        models.ClasePuerto.delete().where(
+            models.ClasePuerto.clase == clase).execute()
 
         for lista, grupo in redes:
             for item in nueva.get(lista, []):
                 (direccion, prefijo) = item.split('/')
                 cidr = models.CIDR.get_or_create(direccion=direccion,
                                                  prefijo=prefijo)[0]
-                models.ClaseCIDR.create_or_get(clase=clase, cidr=cidr,
+                models.ClaseCIDR.create(clase=clase, cidr=cidr,
                                                grupo=grupo)
 
         for lista, grupo in puertos:
@@ -137,7 +139,7 @@ class Actualizador:
                 protocolo = self.protocolo(proto)
                 puerto = models.Puerto.get_or_create(numero=numero,
                                                      protocolo=protocolo)[0]
-                models.ClasePuerto.create_or_get(clase=clase, puerto=puerto,
+                models.ClasePuerto.create(clase=clase, puerto=puerto,
                                                  grupo=grupo)
 
     def protocolo(self, string):

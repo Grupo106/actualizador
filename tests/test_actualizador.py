@@ -243,8 +243,7 @@ class ActualizadorTests(unittest.TestCase):
             # descarto cambios en la base de datos
             transaction.rollback()
 
-    @unittest.skip("Adaptar a peewee")
-    def test_aplicar_actualizacion_sin_cambios(self, mock_get, mock_save):
+    def test_aplicar_actualizacion_sin_cambios(self):
         '''
         Prueba el metodo aplicar_actualizacion con una clase existente que no
         tenga cambios
@@ -381,7 +380,7 @@ class ActualizadorTests(unittest.TestCase):
             )
             cidr = [models.CIDR.create(direccion='1.1.1.1', prefijo=32),
                     models.CIDR.create(direccion='2.2.2.0', prefijo=24),
-                    models.CIDR.create(direccion='3.3.3.0', prefijo=20)]
+                    models.CIDR.create(direccion='3.3.0.0', prefijo=20)]
             for item in cidr:
                 models.ClaseCIDR.create(clase=clase, cidr=item,
                                         grupo=models.OUTSIDE)
@@ -407,40 +406,73 @@ class ActualizadorTests(unittest.TestCase):
                            models.CIDR.prefijo == 32,
                            models.ClaseCIDR.grupo == models.OUTSIDE)
                     .get())
+            redes = (('2.2.2.0', 24, models.OUTSIDE),
+                     ('3.3.0.0', 20, models.OUTSIDE),
+                     ('4.4.4.4', 32, models.INSIDE))
+            for (direccion, prefijo, grupo) in redes:
+                with self.assertRaises(
+                        models.ClaseCIDR.DoesNotExist):
+                    (saved
+                    .redes
+                    .join(models.CIDR)
+                    .where(models.CIDR.direccion == direccion,
+                           models.CIDR.prefijo == prefijo,
+                           models.ClaseCIDR.grupo == grupo)
+                    .get())
             # descarto cambios en la base de datos
             transaction.rollback()
 
-    @unittest.skip("Adaptar a peewee")
-    def test_aplicar_actualizacion_eliminar_puerto(self, mock_get, mock_save,
-                                                   mock_quitar):
+    def test_aplicar_actualizacion_eliminar_puerto(self):
         '''
         Prueba el metodo aplicar_actualizacion con una clase existente que
         tenga menos puertos
         '''
-        # preparo datos
-        mock_get.return_value = netcop.ClaseTrafico(
-            id=1,
-            nombre='foo',
-            descripcion='bar',
-            puertos_outside=[443, 80],
-            puertos_inside=[1024]
-        )
-        clase = {
-            'id': 1,
-            'nombre': 'foo',
-            'descripcion': 'bar',
-            'puertos_outside': [80],
-        }
-        # llamo metodo a probar
-        ret = self.actualizador.aplicar_actualizacion(clase)
-        # verifico que todo este bien
-        mock_quitar.assert_has_calls([
-            call(443, netcop.ClaseTrafico.OUTSIDE),
-            call(1024, netcop.ClaseTrafico.INSIDE),
-        ])
-        assert 443 not in ret.puertos_outside
-        assert 80 in ret.puertos_outside
-        assert ret.puertos_inside is None
+        # creo transaccion para descartar cambios generados en la base
+        with models.db.atomic() as transaction:
+            # preparo datos
+            clase = models.ClaseTrafico.create(
+                id_clase=60606060,
+                nombre='foo',
+                descripcion='bar'
+            )
+            puertos = [models.Puerto.create(numero=443, protocolo=6),
+                       models.Puerto.create(numero=80, protocolo=6)]
+            for item in puertos:
+                models.ClasePuerto.create(clase=clase, puerto=item,
+                                          grupo=models.OUTSIDE)
+            inside = models.Puerto.create(numero=1024, protocolo=17)
+            models.ClasePuerto.create(clase=clase, puerto=inside,
+                                      grupo=models.OUTSIDE)
+            clase = {
+                'id': 60606060,
+                'nombre': 'foo',
+                'descripcion': 'bar',
+                'puertos_inside': ['1024/udp']
+            }
+            # llamo metodo a probar
+            self.actualizador.aplicar_actualizacion(clase)
+
+            # verifico que todo este bien
+            saved = models.ClaseTrafico.get(
+                models.ClaseTrafico.id_clase == 60606060
+            )
+            assert (saved.puertos
+                    .join(models.Puerto)
+                    .where(models.Puerto.numero == 1024,
+                           models.Puerto.protocolo == 17,
+                           models.ClasePuerto.grupo == models.INSIDE)
+                    .get())
+            puertos = ((443, 6, models.OUTSIDE), (80, 6, models.OUTSIDE))
+            for (numero, protocolo, grupo) in puertos:
+                with self.assertRaises(models.ClasePuerto.DoesNotExist):
+                    (saved.puertos
+                          .join(models.Puerto)
+                          .where(models.Puerto.numero == numero,
+                                 models.Puerto.protocolo == protocolo,
+                                 models.ClasePuerto.grupo == grupo)
+                          .get())
+            # descarto cambios en la base de datos
+            transaction.rollback()
 
     @patch('requests.get')
     def test_consultar_version_disponible(self, mock_get):
@@ -524,7 +556,3 @@ class ActualizadorTests(unittest.TestCase):
         # llamo metodo a probar
         with self.assertRaises(Exception):
             self.actualizador.descargar_actualizacion()
-
-
-if __name__ == '__main__':
-    unittest.main()
