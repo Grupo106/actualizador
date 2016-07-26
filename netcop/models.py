@@ -26,7 +26,7 @@ class ClaseTrafico(models.Model):
     Una clase de trafico almacena los patrones a reconocer en los paquetes
     capturados.
     '''
-    id_clase = models.IntegerField(primary_key=True)
+    id_clase = models.PrimaryKeyField()
     nombre = models.CharField(max_length=32)
     descripcion = models.CharField(max_length=160)
     tipo = models.SmallIntegerField(default=0)
@@ -53,7 +53,7 @@ class CIDR(models.Model):
     Si todos los bits de la mascara de subred están en uno representan a una
     red de host y el prefijo es 32.
     '''
-    id_cidr = models.IntegerField(primary_key=True)
+    id_cidr = models.PrimaryKeyField()
     direccion = models.CharField(max_length=32)
     prefijo = models.SmallIntegerField(default=0)
 
@@ -73,7 +73,7 @@ class Puerto(models.Model):
     Los puertos se componen de un numero de 2 bytes sin signo (rango entre 0 y
     65535) y un protocolo que puede ser 6 (TCP) o 17 (UDP).
     '''
-    id_puerto = models.IntegerField(primary_key=True)
+    id_puerto = models.PrimaryKeyField()
     numero = models.IntegerField()
     protocolo = models.SmallIntegerField(default=0)
 
