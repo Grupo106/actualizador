@@ -6,7 +6,7 @@ Se prueban todos los metodos de la clase ´Actualizador´
 '''
 import netcop
 import unittest
-from mock import patch, mock_open, Mock, call
+from mock import patch, mock_open, Mock
 from netcop import models
 
 
@@ -410,15 +410,13 @@ class ActualizadorTests(unittest.TestCase):
                      ('3.3.0.0', 20, models.OUTSIDE),
                      ('4.4.4.4', 32, models.INSIDE))
             for (direccion, prefijo, grupo) in redes:
-                with self.assertRaises(
-                        models.ClaseCIDR.DoesNotExist):
-                    (saved
-                    .redes
-                    .join(models.CIDR)
-                    .where(models.CIDR.direccion == direccion,
-                           models.CIDR.prefijo == prefijo,
-                           models.ClaseCIDR.grupo == grupo)
-                    .get())
+                with self.assertRaises(models.ClaseCIDR.DoesNotExist):
+                    (saved.redes
+                          .join(models.CIDR)
+                          .where(models.CIDR.direccion == direccion,
+                                 models.CIDR.prefijo == prefijo,
+                                 models.ClaseCIDR.grupo == grupo)
+                          .get())
             # descarto cambios en la base de datos
             transaction.rollback()
 
