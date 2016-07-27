@@ -99,7 +99,8 @@ class Actualizador:
         )
 
         query = models.ClaseTrafico.select().where(
-            models.ClaseTrafico.id_clase == nueva['id']
+            models.ClaseTrafico.id_clase == nueva['id'],
+            models.ClaseTrafico.tipo == models.ClaseTrafico.SISTEMA,
         )
         # si la clase existe actualizo sus campos
         if not creada:

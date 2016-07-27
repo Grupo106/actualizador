@@ -26,6 +26,8 @@ class ClaseTrafico(models.Model):
     Una clase de trafico almacena los patrones a reconocer en los paquetes
     capturados.
     '''
+    # Identificador de clases de sistema
+    SISTEMA = 0
     id_clase = models.PrimaryKeyField()
     nombre = models.CharField(max_length=32)
     descripcion = models.CharField(max_length=160)
