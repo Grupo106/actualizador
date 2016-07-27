@@ -102,14 +102,21 @@ class Actualizador:
             models.ClaseTrafico.id_clase == nueva['id'],
             models.ClaseTrafico.tipo == models.ClaseTrafico.SISTEMA,
         )
-        # si la clase existe actualizo sus campos
-        if not creada:
-            clase = query.first()
-            clase.nombre = nueva.get("nombre", "")
-            clase.descripcion = nueva.get("descripcion", "")
-            clase.activa = nueva.get("activa", True)
-            clase.save()
-        self.actualizar_colecciones(clase, nueva)
+        # si existe el id, pero no es clase de sistema, no actualiza el objeto
+        # y logueo que se quiere modificar algo no permitido
+        if not query.exists():
+            syslog.syslog(syslog.LOG_CRIT, 
+                          "Intentando actualizar la clase personalizada %d" %
+                          nueva["id"])
+        else:
+            # si la clase existe actualizo sus campos
+            if not creada:
+                clase = query.first()
+                clase.nombre = nueva.get("nombre", "")
+                clase.descripcion = nueva.get("descripcion", "")
+                clase.activa = nueva.get("activa", True)
+                clase.save()
+            self.actualizar_colecciones(clase, nueva)
         return clase
 
     def actualizar_colecciones(self, clase, nueva):
