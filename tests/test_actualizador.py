@@ -343,7 +343,7 @@ class ActualizadorTests(unittest.TestCase):
                 'nombre': 'foo',
                 'descripcion': 'bar',
                 'puertos_outside': ['443/tcp', '80/tcp'],
-                'puertos_inside': ['1024/udp']
+                'puertos_inside': ['1024/udp', '53']
             }
             # llamo metodo a probar
             self.actualizador.aplicar_actualizacion(clase)
@@ -354,7 +354,8 @@ class ActualizadorTests(unittest.TestCase):
             )
             puertos = ((443,   6, models.OUTSIDE),
                        (80,    6, models.OUTSIDE),
-                       (1024, 17, models.INSIDE))
+                       (1024, 17, models.INSIDE),
+                       (53, 0, models.INSIDE),)
             for (numero, protocolo, grupo) in puertos:
                 assert (saved.puertos
                         .join(models.Puerto)

@@ -134,7 +134,9 @@ class Actualizador:
 
         for lista, grupo in puertos:
             for item in nueva.get(lista, []):
-                (numero, proto) = item.split('/')
+                s = item.split('/')
+                numero = s[0]
+                proto = s[1] if len(s) == 2 else ""
                 protocolo = self.protocolo(proto)
                 puerto = models.Puerto.get_or_create(numero=numero,
                                                      protocolo=protocolo)[0]
