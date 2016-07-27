@@ -98,20 +98,14 @@ class Actualizador:
             activa=nueva.get("activa", True),
         )
 
-        query = models.ClaseTrafico.select().where(
-            models.ClaseTrafico.id_clase == nueva['id'],
-            models.ClaseTrafico.tipo == models.ClaseTrafico.SISTEMA,
-        )
-        # si existe el id, pero no es clase de sistema, no actualiza el objeto
-        # y logueo que se quiere modificar algo no permitido
-        if not query.exists():
+        # si se quiere modificar una clase que no sea de sistema
+        if clase.tipo != clase.SISTEMA:
             syslog.syslog(syslog.LOG_CRIT, 
                           "Intentando actualizar la clase personalizada %d" %
                           nueva["id"])
         else:
             # si la clase existe actualizo sus campos
             if not creada:
-                clase = query.first()
                 clase.nombre = nueva.get("nombre", "")
                 clase.descripcion = nueva.get("descripcion", "")
                 clase.activa = nueva.get("activa", True)
