@@ -100,7 +100,7 @@ class Actualizador:
 
         # si se quiere modificar una clase que no sea de sistema
         if clase.tipo != clase.SISTEMA:
-            syslog.syslog(syslog.LOG_CRIT, 
+            syslog.syslog(syslog.LOG_CRIT,
                           "Intentando actualizar la clase personalizada %d" %
                           nueva["id"])
         else:

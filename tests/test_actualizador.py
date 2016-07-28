@@ -378,7 +378,7 @@ class ActualizadorTests(unittest.TestCase):
                 id_clase=60606060,
                 nombre='foo',
                 descripcion='bar',
-                tipo=1 # tipo personalizada
+                tipo=1  # tipo personalizada
             )
             puertos = [models.Puerto.create(numero=80, protocolo=6),
                        models.Puerto.create(numero=443, protocolo=6)]
