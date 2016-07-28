@@ -331,7 +331,7 @@ class ActualizadorTests(unittest.TestCase):
             clase = models.ClaseTrafico.create(
                 id_clase=60606060,
                 nombre='foo',
-                descripcion='bar'
+                descripcion='bar',
             )
             puertos = [models.Puerto.create(numero=80, protocolo=6),
                        models.Puerto.create(numero=80, protocolo=17)]
@@ -343,7 +343,7 @@ class ActualizadorTests(unittest.TestCase):
                 'nombre': 'foo',
                 'descripcion': 'bar',
                 'puertos_outside': ['443/tcp', '80/tcp'],
-                'puertos_inside': ['1024/udp']
+                'puertos_inside': ['1024/udp', '53']
             }
             # llamo metodo a probar
             self.actualizador.aplicar_actualizacion(clase)
@@ -354,7 +354,8 @@ class ActualizadorTests(unittest.TestCase):
             )
             puertos = ((443,   6, models.OUTSIDE),
                        (80,    6, models.OUTSIDE),
-                       (1024, 17, models.INSIDE))
+                       (1024, 17, models.INSIDE),
+                       (53, 0, models.INSIDE),)
             for (numero, protocolo, grupo) in puertos:
                 assert (saved.puertos
                         .join(models.Puerto)
@@ -362,6 +363,60 @@ class ActualizadorTests(unittest.TestCase):
                                models.Puerto.protocolo == protocolo,
                                models.ClasePuerto.grupo == grupo)
                         .get())
+            # descarto cambios en la base de datos
+            transaction.rollback()
+
+    def test_aplicar_actualizacion_clase_personalizada(self):
+        '''
+        Prueba el metodo aplicar_actualizacion con una clase que no es de
+        sistema. No debería modificarla
+        '''
+        # creo transaccion para descartar cambios generados en la base
+        with models.db.atomic() as transaction:
+            # preparo datos
+            clase = models.ClaseTrafico.create(
+                id_clase=60606060,
+                nombre='foo',
+                descripcion='bar',
+                tipo=1  # tipo personalizada
+            )
+            puertos = [models.Puerto.create(numero=80, protocolo=6),
+                       models.Puerto.create(numero=443, protocolo=6)]
+            for item in puertos:
+                models.ClasePuerto.create(clase=clase, puerto=item,
+                                          grupo=models.OUTSIDE)
+            clase = {
+                'id': 60606060,
+                'nombre': 'foo',
+                'descripcion': 'bar',
+                'puertos_outside': ['443/tcp', '80/tcp'],
+                'puertos_inside': ['1024/udp', '53']
+            }
+            # llamo metodo a probar
+            self.actualizador.aplicar_actualizacion(clase)
+
+            # verifico que no se haya modificado nada
+            saved = models.ClaseTrafico.get(
+                models.ClaseTrafico.id_clase == 60606060
+            )
+            puertos_si = ((443,   6, models.OUTSIDE),
+                          (80,    6, models.OUTSIDE))
+            puertos_no = ((1024, 17, models.INSIDE),
+                          (53, 0, models.INSIDE),)
+            for (numero, protocolo, grupo) in puertos_si:
+                assert (saved.puertos
+                        .join(models.Puerto)
+                        .where(models.Puerto.numero == numero,
+                               models.Puerto.protocolo == protocolo,
+                               models.ClasePuerto.grupo == grupo)
+                        .get())
+            for (numero, protocolo, grupo) in puertos_no:
+                assert not (saved.puertos
+                            .join(models.Puerto)
+                            .where(models.Puerto.numero == numero,
+                                   models.Puerto.protocolo == protocolo,
+                                   models.ClasePuerto.grupo == grupo)
+                            .exists())
             # descarto cambios en la base de datos
             transaction.rollback()
 

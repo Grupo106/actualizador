@@ -99,33 +99,42 @@ class Actualizador:
             activa=nueva.get("activa", True),
         )
 
-        query = models.ClaseTrafico.select().where(
-            models.ClaseTrafico.id_clase == nueva['id']
-        )
-        # si la clase existe actualizo sus campos
-        if not creada:
-            clase = query.first()
-            clase.nombre = nueva.get("nombre", "")
-            clase.descripcion = nueva.get("descripcion", "")
-            clase.activa = nueva.get("activa", True)
-            clase.save()
-        self.actualizar_colecciones(clase, nueva)
+        # si se quiere modificar una clase que no sea de sistema
+        if clase.tipo != clase.SISTEMA:
+            syslog.syslog(syslog.LOG_CRIT,
+                          "Intentando actualizar la clase personalizada %d" %
+                          nueva["id"])
+        else:
+            # si la clase existe actualizo sus campos
+            if not creada:
+                clase.nombre = nueva.get("nombre", "")
+                clase.descripcion = nueva.get("descripcion", "")
+                clase.activa = nueva.get("activa", True)
+                clase.save()
+            self.actualizar_colecciones(clase, nueva)
         return clase
 
     def actualizar_colecciones(self, clase, nueva):
         '''
         Actualiza las listas de subredes y puertos de la clase de trafico.
         '''
+        (models.ClaseCIDR
+               .delete()
+               .where(models.ClaseCIDR.clase == clase)
+               .execute())
+        (models.ClasePuerto
+               .delete()
+               .where(models.ClasePuerto.clase == clase)
+               .execute())
+        self.actualizar_redes(clase, nueva)
+        self.actualizar_puertos(clase, nueva)
+
+    def actualizar_redes(self, clase, nueva):
+        '''
+        Actualiza las listas de subredes de la clase de trafico.
+        '''
         redes = (('subredes_outside', models.OUTSIDE),
                  ('subredes_inside', models.INSIDE))
-        puertos = (('puertos_outside', models.OUTSIDE),
-                   ('puertos_inside', models.INSIDE))
-
-        models.ClaseCIDR.delete().where(
-            models.ClaseCIDR.clase == clase).execute()
-        models.ClasePuerto.delete().where(
-            models.ClasePuerto.clase == clase).execute()
-
         for lista, grupo in redes:
             for item in nueva.get(lista, []):
                 (direccion, prefijo) = item.split('/')
@@ -133,9 +142,17 @@ class Actualizador:
                                                  prefijo=prefijo)[0]
                 models.ClaseCIDR.create(clase=clase, cidr=cidr, grupo=grupo)
 
+    def actualizar_puertos(self, clase, nueva):
+        '''
+        Actualiza las listas de puertos de la clase de trafico.
+        '''
+        puertos = (('puertos_outside', models.OUTSIDE),
+                   ('puertos_inside', models.INSIDE))
         for lista, grupo in puertos:
             for item in nueva.get(lista, []):
-                (numero, proto) = item.split('/')
+                s = item.split('/')
+                numero = s[0]
+                proto = s[1] if len(s) == 2 else ""
                 protocolo = self.protocolo(proto)
                 puerto = models.Puerto.get_or_create(numero=numero,
                                                      protocolo=protocolo)[0]

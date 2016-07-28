@@ -1,5 +1,17 @@
 engines:
   duplication:
     enabled: true
+    config:
+      languages:
+      - python
     exclude_fingerprints:
       - 6ebec17c560da56fcadde4a3faca08f3
+  fixme:
+    enabled: true
+  radon:
+    enabled: true
+ratings:
+  paths:
+    - "**.py"
+exclude_paths:
+  - tests/
