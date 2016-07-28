@@ -117,16 +117,23 @@ class Actualizador:
         '''
         Actualiza las listas de subredes y puertos de la clase de trafico.
         '''
+        (models.ClaseCIDR
+               .delete()
+               .where(models.ClaseCIDR.clase == clase)
+               .execute())
+        (models.ClasePuerto
+               .delete()
+               .where(models.ClasePuerto.clase == clase)
+               .execute())
+        self.actualizar_redes(clase, nueva)
+        self.actualizar_puertos(clase, nueva)
+
+    def actualizar_redes(self, clase, nueva):
+        '''
+        Actualiza las listas de subredes de la clase de trafico.
+        '''
         redes = (('subredes_outside', models.OUTSIDE),
                  ('subredes_inside', models.INSIDE))
-        puertos = (('puertos_outside', models.OUTSIDE),
-                   ('puertos_inside', models.INSIDE))
-
-        models.ClaseCIDR.delete().where(
-            models.ClaseCIDR.clase == clase).execute()
-        models.ClasePuerto.delete().where(
-            models.ClasePuerto.clase == clase).execute()
-
         for lista, grupo in redes:
             for item in nueva.get(lista, []):
                 (direccion, prefijo) = item.split('/')
@@ -134,6 +141,12 @@ class Actualizador:
                                                  prefijo=prefijo)[0]
                 models.ClaseCIDR.create(clase=clase, cidr=cidr, grupo=grupo)
 
+    def actualizar_puertos(self, clase, nueva):
+        '''
+        Actualiza las listas de puertos de la clase de trafico.
+        '''
+        puertos = (('puertos_outside', models.OUTSIDE),
+                   ('puertos_inside', models.INSIDE))
         for lista, grupo in puertos:
             for item in nueva.get(lista, []):
                 s = item.split('/')
