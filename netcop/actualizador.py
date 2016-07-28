@@ -140,7 +140,8 @@ class Actualizador:
                 (direccion, prefijo) = item.split('/')
                 cidr = models.CIDR.get_or_create(direccion=direccion,
                                                  prefijo=prefijo)[0]
-                models.ClaseCIDR.create(clase=clase, cidr=cidr, grupo=grupo)
+                models.ClaseCIDR.create_or_get(clase=clase, cidr=cidr,
+                                               grupo=grupo)
 
     def actualizar_puertos(self, clase, nueva):
         '''
@@ -156,8 +157,8 @@ class Actualizador:
                 protocolo = self.protocolo(proto)
                 puerto = models.Puerto.get_or_create(numero=numero,
                                                      protocolo=protocolo)[0]
-                models.ClasePuerto.create(clase=clase, puerto=puerto,
-                                          grupo=grupo)
+                models.ClasePuerto.create_or_get(clase=clase, puerto=puerto,
+                                                 grupo=grupo)
 
     def protocolo(self, string):
         '''
