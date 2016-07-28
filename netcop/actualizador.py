@@ -79,11 +79,12 @@ class Actualizador:
         '''
         self.version_actual = self.obtener_version_actual()
         self.version_disponible = self.obtener_version_disponible()
-        syslog.syslog(
-            syslog.LOG_DEBUG,
-            "Version disponible: %s - Version aplicada: %s" %
-            (self.version_disponible[0:6], self.version_actual[0:6])
-        )
+        if self.version_actual and self.version_disponible:
+            syslog.syslog(
+                syslog.LOG_DEBUG,
+                "Version disponible: %s - Version aplicada: %s" %
+                (self.version_disponible[0:6], self.version_actual[0:6])
+            )
         return self.version_actual != self.version_disponible
 
     def aplicar_actualizacion(self, nueva):
