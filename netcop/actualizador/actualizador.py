@@ -16,7 +16,7 @@ Las versiones se descargan en formato JSON.
 import sys
 import syslog
 import requests
-from netcop import config, models
+from . import config, models
 
 
 class Actualizador:

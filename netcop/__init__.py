@@ -1,1 +1,1 @@
-from .actualizador import Actualizador
+from actualizador.actualizador import Actualizador

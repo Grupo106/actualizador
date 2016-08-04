@@ -7,7 +7,7 @@ las consultas a la base de datos en lenguaje python de forma sencilla sin
 necesidad de escribir codigo SQL.
 '''
 import peewee as models
-from netcop import config
+from . import config
 
 # Identificador de grupo para servicios que esten en la red local
 INSIDE = 'i'

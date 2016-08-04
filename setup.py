@@ -2,15 +2,22 @@ from setuptools import setup
 
 setup(
     name='actualizador',
-    version='0.1.0',
+    version='0.2.0',
     author='Yonatan Romero',
     author_email='yromero@openmailbox.org',
     keywords='netcop actualizador',
-    packages=['netcop'],
+    packages=[
+        'netcop',
+        'netcop.actualizador'
+    ],
     url='https://github.com/grupo106/actualizador',
     description='Actualizador de clases de trafico de Netcop',
     long_description=open('README.md').read(),
-    install_requires='requests>=2.4.3',
+    install_requires=[
+        'requests>=2.10.0',
+        'peewee>=2.8.0',
+        'psycopg2>=2.6.0',
+    ],
     scripts=["scripts/actualizador"],
     test_suite="tests",
     classifiers=[
