@@ -110,7 +110,7 @@ class ClaseCIDR(models.Model):
     class Meta:
         database = db
         db_table = u'clase_cidr'
-        primary_key = models.CompositeKey('clase', 'cidr', 'grupo')
+        primary_key = models.CompositeKey('clase', 'cidr')
 
 
 class ClasePuerto(models.Model):
@@ -131,4 +131,4 @@ class ClasePuerto(models.Model):
     class Meta:
         database = db
         db_table = u'clase_puerto'
-        primary_key = models.CompositeKey('clase', 'puerto', 'grupo')
+        primary_key = models.CompositeKey('clase', 'puerto')
