@@ -18,7 +18,7 @@ python setup.py install
 ```
 
 ## Configuracion
-Editar archivo `netcop/config.py`
+Editar archivo `/etc/netcop/netcop.config`
 
 ## Uso
 ```sh
