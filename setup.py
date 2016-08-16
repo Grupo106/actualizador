@@ -18,7 +18,7 @@ setup(
         'peewee>=2.8.0',
         'psycopg2>=2.6.0',
     ],
-    scripts=["scripts/actualizador"],
+    scripts=["scripts/actualizar"],
     test_suite="tests",
     classifiers=[
         'Development Status :: 4 - Beta',
