@@ -56,4 +56,4 @@ for section in config.sections():
 sections = [a for a in dir(Default) if not a.startswith('__')]
 for section in sections:
     if globals().get(section) is None:
-        conf = globals()[section] = getattr(Default, section)
+        globals()[section] = getattr(Default, section)
