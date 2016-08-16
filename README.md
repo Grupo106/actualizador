@@ -20,6 +20,11 @@ python setup.py install
 ## Configuracion
 Editar archivo `netcop/config.py`
 
+## Uso
+```sh
+$ actualizar
+```
+
 ## Logging
 Los logs se guardan mediante el demonio syslog de Unix (Journalctl
 en los Linux modernos)
