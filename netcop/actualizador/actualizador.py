@@ -44,14 +44,14 @@ class Actualizador:
         '''
         version = None
         try:
-            with open(config.LOCAL_VERSION, 'r') as f:
+            with open(config.NETCOP['local_version'], 'r') as f:
                 # solo leo los primeros 65 bytes porque el numero de version
                 # es un SHA256
                 version = f.read(65)
         except:
             syslog.syslog(syslog.LOG_WARNING,
                           "No se pudo leer el archivo %s" %
-                          config.LOCAL_VERSION)
+                          config.NETCOP['local_version'])
         return version
 
     def guardar_version_actual(self):
@@ -62,20 +62,17 @@ class Actualizador:
         en config.LOCAL_VERSION.
         '''
         try:
-            with open(config.LOCAL_VERSION, 'w') as f:
+            with open(config.NETCOP['local_version'], 'w') as f:
                 f.write(self.version_actual)
         except:
             syslog.syslog(syslog.LOG_CRIT,
                           "No se pudo escribir en el archivo %s" %
-                          config.LOCAL_VERSION)
+                          config.NETCOP['local_version'])
 
     def hay_actualizacion(self):
         '''
         Devuelve verdadero si existe una nueva version de firmas para
         actualizar.
-
-        Lee la ultima version aplicada desde el archivo declarado en
-        ´config.LOCAL_VERSION´
         '''
         self.version_actual = self.obtener_version_actual()
         self.version_disponible = self.obtener_version_disponible()
@@ -182,9 +179,6 @@ class Actualizador:
         Aplica la actualizacion de la base de firmas a la ultima version
         disponible.
 
-        Actualiza el archivo que contiene la ultima version de firmas
-        instaladas declarado en 'config.LOCAL_VERSION'
-
         Devuelve verdadero si alguna clase fue modificada
         '''
         syslog.syslog(syslog.LOG_DEBUG, "Actualizando a la version: %s" %
@@ -204,7 +198,7 @@ class Actualizador:
         Obtiene el numero de la ultima version de firmas disponibles desde el
         servidor de firmas.
         '''
-        return self.obtener_servidor(config.URL_VERSION)["version"]
+        return self.obtener_servidor(config.NETCOP['url_version'])["version"]
 
     def descargar_actualizacion(self):
         '''
@@ -212,7 +206,7 @@ class Actualizador:
         clases de trafico.
         '''
         syslog.syslog(syslog.LOG_DEBUG, "Descargando ultima versión")
-        return self.obtener_servidor(config.URL_DOWNLOAD)["clases"]
+        return self.obtener_servidor(config.NETCOP['url_download'])["clases"]
 
     def obtener_servidor(self, url):
         '''

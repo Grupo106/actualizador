@@ -48,7 +48,7 @@ class ActualizadorTests(unittest.TestCase):
         # llamo metodo a probar
         version = self.actualizador.obtener_version_actual()
         # verifico que todo este bien
-        mock.assert_called_once_with(config.LOCAL_VERSION, 'r')
+        mock.assert_called_once_with(config.NETCOP['local_version'], 'r')
         assert version == 'v1'
 
     @patch('syslog.syslog')
@@ -63,7 +63,7 @@ class ActualizadorTests(unittest.TestCase):
         # llamo metodo a probar
         version = self.actualizador.obtener_version_actual()
         # verifico que todo este bien
-        mock_open.assert_called_once_with(config.LOCAL_VERSION, 'r')
+        mock_open.assert_called_once_with(config.NETCOP['local_version'], 'r')
         mock_syslog.assert_called_once()
         assert version is None
 
@@ -79,7 +79,7 @@ class ActualizadorTests(unittest.TestCase):
         # llamo metodo a probar
         self.actualizador.guardar_version_actual()
         # verifico que todo este bien
-        m.assert_called_once_with(config.LOCAL_VERSION, 'w')
+        m.assert_called_once_with(config.NETCOP['local_version'], 'w')
         handle = m()
         handle.write.assert_called_once_with('pepe')
 
@@ -95,7 +95,7 @@ class ActualizadorTests(unittest.TestCase):
         # llamo metodo a probar
         self.actualizador.guardar_version_actual()
         # verifico que todo este bien
-        mock_open.assert_called_once_with(config.LOCAL_VERSION, 'w')
+        mock_open.assert_called_once_with(config.NETCOP['local_version'], 'w')
         mock_syslog.assert_called_once()
 
     def test_actualizar(self):
