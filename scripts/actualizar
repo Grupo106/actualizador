@@ -5,20 +5,18 @@ import syslog
 import netcop
 from netcop.actualizador import models
 
-if __name__ == "__main__":
+try:
     syslog.openlog('actualizador')
-    try:
-        models.db.connect()
-        actualizador = netcop.Actualizador()
-        if actualizador.hay_actualizacion():
-            actualizador.actualizar()
-        else:
-            syslog.syslog(syslog.LOG_INFO, 
-                          "No hay actualizaciones disponibles")
-    except:
-        raise
-        sys.exit(1)
-    finally:
-        syslog.closelog()
-        if not models.db.is_closed():
-            models.db.close()
+    models.db.connect()
+    actualizador = netcop.Actualizador()
+    if actualizador.hay_actualizacion():
+        actualizador.actualizar()
+    else:
+        syslog.syslog(syslog.LOG_INFO, "No hay actualizaciones disponibles")
+except Exception as inst:
+    syslog.syslog(syslog.LOG_CRIT, "Error fatal: %s" % inst)
+    sys.exit(1)
+finally:
+    syslog.closelog()
+    if not models.db.is_closed():
+        models.db.close()
