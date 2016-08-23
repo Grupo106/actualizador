@@ -10,6 +10,7 @@ setup(
         'netcop',
         'netcop.actualizador'
     ],
+    namespace_packages = ['netcop'],
     url='https://github.com/grupo106/actualizador',
     description='Actualizador de clases de trafico de Netcop',
     long_description=open('README.md').read(),
