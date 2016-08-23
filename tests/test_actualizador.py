@@ -8,6 +8,7 @@ import netcop
 import unittest
 from mock import patch, mock_open, Mock
 from netcop.actualizador import models, config
+from netcop.actualizador.actualizador import Actualizador
 
 
 class ActualizadorTests(unittest.TestCase):
@@ -17,10 +18,10 @@ class ActualizadorTests(unittest.TestCase):
             [models.ClaseTrafico, models.CIDR, models.Puerto, models.ClaseCIDR,
              models.ClasePuerto],
             safe=True)
-        self.actualizador = netcop.Actualizador()
+        self.actualizador = Actualizador()
 
-    @patch.object(netcop.Actualizador, 'obtener_version_actual')
-    @patch.object(netcop.Actualizador, 'obtener_version_disponible')
+    @patch.object(Actualizador, 'obtener_version_actual')
+    @patch.object(Actualizador, 'obtener_version_disponible')
     def test_hay_actualizacion(self, mock_disponible, mock_actual):
         '''
         Prueba que el metodo hay_actualizacion devuelva verdadero cuando
