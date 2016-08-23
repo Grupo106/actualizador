@@ -1,1 +1,0 @@
-from actualizador.actualizador import Actualizador
