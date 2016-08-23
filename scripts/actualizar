@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 import sys
 import syslog
-import netcop
 from netcop.actualizador import models
+from netcop.actualizador.actualizador import Actualizador
 
 try:
     syslog.openlog('actualizador')
     models.db.connect()
-    actualizador = netcop.Actualizador()
+    actualizador = Actualizador()
     if actualizador.hay_actualizacion():
         actualizador.actualizar()
     else:
