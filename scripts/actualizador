@@ -4,12 +4,13 @@ import sys
 import syslog
 import netcop
 from netcop.actualizador import models
+from netcop.actualizador.actualizador import Actualizador
 
 if __name__ == "__main__":
     syslog.openlog('actualizador')
     try:
         models.db.connect()
-        actualizador = netcop.Actualizador()
+        actualizador = Actualizador()
         if actualizador.hay_actualizacion():
             actualizador.actualizar()
         else:
