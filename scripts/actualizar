@@ -1,0 +1,22 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+import sys
+import syslog
+from netcop.actualizador import models
+from netcop.actualizador.actualizador import Actualizador
+
+try:
+    syslog.openlog('actualizador')
+    models.db.connect()
+    actualizador = Actualizador()
+    if actualizador.hay_actualizacion():
+        actualizador.actualizar()
+    else:
+        syslog.syslog(syslog.LOG_INFO, "No hay actualizaciones disponibles")
+except Exception as inst:
+    syslog.syslog(syslog.LOG_CRIT, "Error fatal: %s" % inst)
+    sys.exit(1)
+finally:
+    syslog.closelog()
+    if not models.db.is_closed():
+        models.db.close()
