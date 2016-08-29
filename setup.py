@@ -6,7 +6,7 @@ setup(
     author='Yonatan Romero',
     author_email='yromero@openmailbox.org',
     keywords='netcop actualizador',
-    packages=['netcop.actualizador'],
+    packages=['netcop', 'netcop.actualizador'],
     namespace_packages = ['netcop'],
     url='https://github.com/grupo106/actualizador',
     description='Actualizador de clases de trafico de Netcop',
