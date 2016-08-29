@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='actualizador',
-    version='0.2.0',
+    version='0.3.0',
     author='Yonatan Romero',
     author_email='yromero@openmailbox.org',
     keywords='netcop actualizador',
