@@ -5,12 +5,23 @@ import syslog
 from netcop.actualizador import models
 from netcop.actualizador.actualizador import Actualizador
 
+despachante = False
+
+try:
+    from netcop.despachante import Despachante
+    despachante = True
+except ImportError:
+    pass
+
 try:
     syslog.openlog('actualizador')
     models.db.connect()
     actualizador = Actualizador()
     if actualizador.hay_actualizacion():
         actualizador.actualizar()
+        syslog.syslog(syslog.LOG_INFO, "Despachando politicas")
+        if despachante:
+            Despachante().despachar()
     else:
         syslog.syslog(syslog.LOG_INFO, "No hay actualizaciones disponibles")
 except Exception as inst:
